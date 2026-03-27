@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-base: #f6faff;
+  --color-surface: #ffffff;
+  --color-surface-container-lowest: rgba(255, 255, 255, 0.8);
+  --color-surface-container-low: #ebf5ff;
+  --color-surface-container: #e1f0fe;
+  
+  --color-primary: #005bc0;
+  --color-primary-dim: #004fa9;
+  --color-primary-container: #d8e2ff;
+  --color-on-primary: #f7f7ff;
+  --color-on-primary-fixed-variant: #0058ba;
+  
+  --color-on-surface: #1e3544;
+  --color-on-surface-variant: #4b6273;
+  
+  --color-outline-variant: #9eb5c8;
+  
+  /* Liquid Glass Custom Utilities */
+  --shadow-liquid: 0 20px 40px rgba(0, 91, 192, 0.06);
+  --shadow-liquid-hover: 0 30px 60px rgba(0, 91, 192, 0.12);
+  --shadow-liquid-glow: 0 0 20px rgba(0, 91, 192, 0.2);
+
+  --font-manrope: 'Manrope', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-base);
+    color: var(--color-on-surface);
+    font-family: var(--font-inter);
+    /* Soft mesh gradient background to enhance the Liquid Glass effect */
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(211,100%,94%,1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(214,100%,96%,1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(211,100%,94%,1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(214,100%,96%,1) 0px, transparent 50%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .bg-glass {
+    background-color: var(--color-surface-container-lowest);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  .bg-glass-heavy {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+  }
+
+  .border-ghost {
+    border: 1.5px solid rgba(158, 181, 200, 0.15); /* outline-variant at 15% */
+  }
+
+  .border-ghost-focus {
+    border: 2px solid rgba(0, 91, 192, 0.3); /* primary at 30% */
+  }
+
+  .shadow-liquid-glass {
+    box-shadow: var(--shadow-liquid);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dim));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .bg-primary-gradient {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dim));
+  }
+}
