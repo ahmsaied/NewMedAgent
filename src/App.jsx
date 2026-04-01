@@ -7,6 +7,7 @@ import MedicalID from './pages/MedicalID';
 import ScanImaging from './pages/ScanImaging';
 import Emergency from './pages/Emergency';
 import ContactDoctor from './pages/ContactDoctor';
+import SharedInsurance from './pages/SharedInsurance';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -14,17 +15,20 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<TopNavLayout />}>
-        {/* Diagnose / Home Page (Public) */}
+        {/* Public Pages */}
         <Route index element={<ChatDashboard />} />
+        <Route path="contact" element={<ContactDoctor />} />
+        <Route path="scans" element={<ScanImaging />} />
+        <Route path="scan-imaging" element={<ScanImaging />} />
+        <Route path="emergency" element={<Emergency />} />
         
-        {/* Secure Pages */}
-        <Route path="contact" element={<ProtectedRoute><ContactDoctor /></ProtectedRoute>} />
+        {/* Secure Pages (Login Required) */}
         <Route path="medicines" element={<ProtectedRoute><Medicines /></ProtectedRoute>} />
-        <Route path="scans" element={<ProtectedRoute><ScanImaging /></ProtectedRoute>} />
-        <Route path="scan-imaging" element={<ProtectedRoute><ScanImaging /></ProtectedRoute>} />
         <Route path="id" element={<ProtectedRoute><MedicalID /></ProtectedRoute>} />
-        <Route path="emergency" element={<ProtectedRoute><Emergency /></ProtectedRoute>} />
       </Route>
+
+      {/* Public Standalone Pages */}
+      <Route path="share/insurance-:id" element={<SharedInsurance />} />
     </Routes>
   );
 }

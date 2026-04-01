@@ -1,23 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Menu, X, User, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './ui/Button';
 import { AuthModal } from './AuthModal';
+import { useAuth } from '../context/AuthContext';
+import { LogOut, ChevronDown } from 'lucide-react';
 
 export function TopNavLayout() {
   const { t, i18n } = useTranslation();
+  const { isAuthenticated, userData, logout } = useAuth();
+  const navigate = useNavigate();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const langMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (langMenuRef.current && !langMenuRef.current.contains(event.target)) {
         setIsLangMenuOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
       }
     };
     
@@ -30,9 +39,9 @@ export function TopNavLayout() {
   const navLinks = [
     { name: t('nav.home'), path: '/' },
     { name: t('nav.contact'), path: '/contact' },
-    { name: t('nav.medicines'), path: '/medicines' },
+    ...(isAuthenticated ? [{ name: t('nav.medicines'), path: '/medicines' }] : []),
     { name: t('nav.scan'), path: '/scans' },
-    { name: t('nav.medicalId'), path: '/id' },
+    ...(isAuthenticated && userData.isRegistered ? [{ name: t('nav.medicalId'), path: '/id' }] : []),
     { name: t('nav.emergency'), path: '/emergency' },
   ];
 
@@ -141,14 +150,66 @@ export function TopNavLayout() {
               )}
             </AnimatePresence>
           </div>
-          <button 
-            onClick={() => setIsAuthOpen(true)} 
-            className="flex items-center px-4 py-2.5 rounded-full text-sm font-medium font-inter transition-all duration-300 text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] hover:bg-white hover:shadow-[0_8px_20px_rgba(0,91,192,0.15)] hover:-translate-y-[1px] hover:scale-[1.02]"
-          >
-            <User className="w-4 h-4 mr-2 hidden sm:block" />
-            <span className="hidden sm:inline">{t('nav.signIn')}</span>
-            <span className="sm:hidden text-xs">{t('nav.login')}</span>
-          </button>
+          {userData.isRegistered ? (
+            <div className="relative" ref={userMenuRef}>
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-white hover:shadow-sm transition-all border border-transparent hover:border-ghost"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-gradient flex items-center justify-center text-white text-[10px] font-black border border-white shadow-sm overflow-hidden">
+                  {userData.profileImage ? (
+                    <img src={userData.profileImage} alt="User" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
+                </div>
+                <span className="text-xs font-bold text-[#191c1e] hidden sm:block">
+                  {userData.firstName ? `Hi, ${userData.firstName}` : 'Account'}
+                </span>
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute top-full right-0 mt-3 w-48 bg-white rounded-3xl shadow-2xl border border-ghost p-2 z-50 overflow-hidden"
+                  >
+                    <NavLink
+                      to="/id"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-3 w-full p-4 rounded-t-2xl hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all"
+                    >
+                      <User className="w-4 h-4 text-blue-500" />
+                      Medical Profile
+                    </NavLink>
+                    <button 
+                      onClick={() => { 
+                        logout(); 
+                        setIsUserMenuOpen(false);
+                        navigate('/');
+                      }}
+                      className="flex items-center gap-3 w-full p-4 rounded-b-2xl hover:bg-red-50 text-xs font-bold text-red-500 transition-all"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setIsAuthOpen(true)} 
+              className="flex items-center px-4 py-2.5 rounded-full text-sm font-medium font-inter transition-all duration-300 text-[var(--color-on-surface-variant)] hover:text-[var(--color-on-surface)] hover:bg-white hover:shadow-[0_8px_20px_rgba(0,91,192,0.15)] hover:-translate-y-[1px] hover:scale-[1.02]"
+            >
+              <User className="w-4 h-4 mr-2 hidden sm:block" />
+              <span className="hidden sm:inline">{t('nav.signIn')}</span>
+              <span className="sm:hidden text-xs">{t('nav.login')}</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -210,10 +271,34 @@ export function TopNavLayout() {
               </nav>
               
               <div className="mt-8">
-                <Button variant="primary" onClick={() => { setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-4 text-base shadow-liquid-glass">
-                  <User className="w-5 h-5 mr-3" />
-                  Sign In / Register
-                </Button>
+                {userData.isRegistered ? (
+                  <div className="flex flex-col gap-3">
+                    <NavLink
+                      to="/id"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full p-4 rounded-[1.5rem] bg-white/50 border border-ghost text-lg font-bold text-slate-700 flex items-center gap-3"
+                    >
+                      <User className="w-5 h-5 text-blue-500" />
+                      View Medical Profile
+                    </NavLink>
+                    <button 
+                      onClick={() => { 
+                        logout(); 
+                        setMobileMenuOpen(false); 
+                        navigate('/');
+                      }}
+                      className="w-full p-4 rounded-[1.5rem] bg-red-50 text-red-500 border border-red-100 text-lg font-bold flex items-center justify-center gap-3"
+                    >
+                      <LogOut className="w-5 h-5" />
+                      Logout Account
+                    </button>
+                  </div>
+                ) : (
+                  <Button variant="primary" onClick={() => { setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-4 text-base shadow-liquid-glass">
+                    <User className="w-5 h-5 mr-3" />
+                    Sign In / Register
+                  </Button>
+                )}
               </div>
             </motion.div>
           </>

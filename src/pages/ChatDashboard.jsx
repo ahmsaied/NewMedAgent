@@ -4,16 +4,16 @@ import { Share, MoreVertical, BrainCircuit, Activity, Pill, Microscope, History,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { chatHistory } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
 import femaleAvatar from '../assets/female-avatar.svg';
 import maleAvatar from '../assets/male-avatar.svg';
 
 export default function ChatDashboard() {
   const { t } = useTranslation();
+  const { userData } = useAuth();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   
-  const userAvatarUrl = null; // Simulated DB response
-  const userGender = 'F';
-  const displayAvatar = userAvatarUrl || (userGender === 'F' ? femaleAvatar : maleAvatar);
+  const displayAvatar = userData.profileImage || maleAvatar;
 
   return (
     <div className="flex h-[calc(100vh-80px)] w-[calc(100%+2rem)] -mx-4 md:w-[calc(100%+4rem)] md:-mx-8 -mt-5 -mb-8 relative overflow-hidden bg-transparent">

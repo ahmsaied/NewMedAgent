@@ -71,6 +71,7 @@ export function AddContactModal({ isOpen, onClose }) {
               currentImage={formData.image}
               shape="circle"
               label="Add Photo"
+              showAvatars={true}
             />
             <div className="flex flex-col items-center text-center">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Emergency Contact Avatar</span>

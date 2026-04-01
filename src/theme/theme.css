@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  /* Brand Colors */
   --color-base: #f6faff;
   --color-surface: #ffffff;
   --color-surface-container-lowest: rgba(255, 255, 255, 0.8);
@@ -18,9 +19,9 @@
   
   --color-outline-variant: #9eb5c8;
   
-  /* Liquid Glass Custom Utilities */
-  --shadow-liquid: 0 20px 40px rgba(0, 91, 192, 0.06);
-  --shadow-liquid-hover: 0 30px 60px rgba(0, 91, 192, 0.12);
+  /* Liquid Glass Custom Utilities - Use naming that generates utilities automatically */
+  --shadow-liquid-glass: 0 40px 80px rgba(0, 91, 192, 0.15);
+  --shadow-liquid-hover: 0 50px 100px rgba(0, 91, 192, 0.25);
   --shadow-liquid-glow: 0 0 20px rgba(0, 91, 192, 0.2);
 
   --font-manrope: 'Manrope', sans-serif;
@@ -32,7 +33,6 @@
     background-color: var(--color-base);
     color: var(--color-on-surface);
     font-family: var(--font-inter);
-    /* Soft mesh gradient background to enhance the Liquid Glass effect */
     background-image: 
       radial-gradient(at 0% 0%, hsla(211,100%,94%,1) 0px, transparent 50%),
       radial-gradient(at 100% 0%, hsla(214,100%,96%,1) 0px, transparent 50%),
@@ -44,28 +44,16 @@
 }
 
 @layer utilities {
-  .bg-glass {
-    background-color: var(--color-surface-container-lowest);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+  .bg-glass-liquid {
+    @apply bg-white/40 backdrop-blur-3xl border border-white/60 shadow-liquid-glass;
   }
   
   .bg-glass-heavy {
-    background-color: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(24px) saturate(150%);
-    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    @apply bg-white/80 backdrop-blur-3xl border border-white/60 shadow-liquid-glass;
   }
 
   .border-ghost {
-    border: 1.5px solid rgba(158, 181, 200, 0.15); /* outline-variant at 15% */
-  }
-
-  .border-ghost-focus {
-    border: 2px solid rgba(0, 91, 192, 0.3); /* primary at 30% */
-  }
-
-  .shadow-liquid-glass {
-    box-shadow: var(--shadow-liquid);
+    border: 1.5px solid rgba(158, 181, 200, 0.15);
   }
 
   .text-gradient {
@@ -76,5 +64,30 @@
 
   .bg-primary-gradient {
     background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dim));
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Date Picker Theme Support */
+  input[type="date"] {
+    position: relative;
+    color-scheme: light;
+  }
+
+  input[type="date"]::-webkit-inner-spin-button,
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.1;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+  }
+
+  input[type="date"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 0.8;
   }
 }

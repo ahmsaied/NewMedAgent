@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Image as ImageIcon, Cloud, X, Check, RefreshCw, Loader2 } from 'lucide-react';
+import { Camera, Image as ImageIcon, Cloud, X, Check, RefreshCw, Loader2, User } from 'lucide-react';
 import { useImagePicker } from '../../hooks/useImagePicker';
 import { motion, AnimatePresence } from 'framer-motion';
+import maleAvatar from '../../assets/male-avatar.svg';
+import femaleAvatar from '../../assets/female-avatar.svg';
 
 /**
  * UniversalImagePicker Component
@@ -14,6 +16,7 @@ export function UniversalImagePicker({
   shape = 'circle', // 'circle' or 'square'
   label = 'Add Photo',
   className = "",
+  showAvatars = false,
   children
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -80,6 +83,11 @@ export function UniversalImagePicker({
     openGallery();
   };
 
+  const handleAvatarSelect = (avatarPath) => {
+    onImageSelect(avatarPath);
+    setIsMenuOpen(false);
+  };
+
   return (
     <div className={`relative ${className}`}>
       {/* Trigger Button */}
@@ -118,60 +126,76 @@ export function UniversalImagePicker({
         </button>
       )}
 
-      {/* Selection Menu Backdrop (Centered Modal) */}
+      {/* Selection Menu Backdrop (Centered Floating Island) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/40 backdrop-blur-md" 
+              className="absolute inset-0 bg-slate-900/10 backdrop-blur-sm" 
               onClick={() => setIsMenuOpen(false)} 
             />
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.9, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative z-[110] w-full max-w-sm bg-white/95 backdrop-blur-2xl border border-white/40 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden"
+              exit={{ opacity: 0, scale: 0.9, y: 30 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="relative z-[110] w-[95%] max-w-sm bg-slate-800/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.4)] overflow-hidden flex flex-col max-h-[85vh]"
             >
-              <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Select Image Source</h3>
-                <button onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-slate-400" />
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 pb-2 shrink-0">
+                <h3 className="text-sm font-black text-white uppercase tracking-widest opacity-80 pl-2">Select Source</h3>
+                <button type="button" onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/40">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <div className="p-4 flex flex-col gap-2">
-                <button onClick={startCamera} className="w-full p-4 rounded-2xl hover:bg-blue-50 text-left flex items-center gap-4 transition-all group border border-transparent hover:border-blue-100">
-                  <div className="bg-blue-100 p-3 rounded-xl group-hover:scale-110 transition-transform"><Camera className="w-6 h-6 text-blue-600" /></div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-800">Take Photo</span>
-                    <span className="text-xs text-slate-500 font-medium tracking-tight">Use your device camera</span>
-                  </div>
-                </button>
-                
-                <button onClick={handleGallery} className="w-full p-4 rounded-2xl hover:bg-purple-50 text-left flex items-center gap-4 transition-all group border border-transparent hover:border-purple-100">
-                  <div className="bg-purple-100 p-3 rounded-xl group-hover:scale-110 transition-transform"><ImageIcon className="w-6 h-6 text-purple-600" /></div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-800">Photo Gallery</span>
-                    <span className="text-xs text-slate-500 font-medium tracking-tight">Upload from your device</span>
-                  </div>
-                </button>
-                
-                <button onClick={handleDrive} className="w-full p-4 rounded-2xl hover:bg-amber-50 text-left flex items-center gap-4 transition-all group border border-transparent hover:border-amber-100">
-                  <div className="bg-amber-100 p-3 rounded-xl group-hover:scale-110 transition-transform"><Cloud className="w-6 h-6 text-amber-600" /></div>
-                  <div className="flex flex-col">
-                    <span className="font-bold text-slate-800">Google Drive</span>
-                    <span className="text-xs text-slate-500 font-medium tracking-tight">Select from cloud storage</span>
-                  </div>
-                </button>
-              </div>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-6 pt-2 custom-scrollbar">
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <button type="button" onClick={startCamera} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
+                    <div className="bg-blue-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><Camera className="w-5 h-5 text-blue-400" /></div>
+                    <span className="text-[10px] font-bold text-white/60">Camera</span>
+                  </button>
+                  <button type="button" onClick={handleGallery} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
+                    <div className="bg-purple-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><ImageIcon className="w-5 h-5 text-purple-400" /></div>
+                    <span className="text-[10px] font-bold text-white/60">Gallery</span>
+                  </button>
+                  <button type="button" onClick={handleDrive} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
+                    <div className="bg-amber-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><Cloud className="w-5 h-5 text-amber-400" /></div>
+                    <span className="text-[10px] font-bold text-white/60">Drive</span>
+                  </button>
+                </div>
 
-              <div className="p-4 bg-slate-50/50 flex justify-center">
-                <button onClick={() => setIsMenuOpen(false)} className="text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors py-1">
-                  Cancel
-                </button>
+                {showAvatars && (
+                  <div className="pt-6 border-t border-white/5">
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-4 text-center">Or Use Avatar</p>
+                    <div className="flex justify-center gap-8">
+                      <button 
+                        type="button"
+                        onClick={() => handleAvatarSelect(maleAvatar)}
+                        className="flex flex-col items-center gap-2 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300 overflow-hidden">
+                          <img src={maleAvatar} alt="Male" className="w-12 h-12 object-contain" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Male</span>
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={() => handleAvatarSelect(femaleAvatar)}
+                        className="flex flex-col items-center gap-2 group"
+                      >
+                        <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300 overflow-hidden">
+                          <img src={femaleAvatar} alt="Female" className="w-12 h-12 object-contain" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Female</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -207,6 +231,22 @@ export function UniversalImagePicker({
           </div>
         )}
       </AnimatePresence>
+
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      `}</style>
     </div>
   );
 }
