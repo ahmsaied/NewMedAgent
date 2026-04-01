@@ -7,7 +7,7 @@ import { theme } from '../../theme/tokens';
 export function DatePicker({ label, value, onChange, placeholder = 'Select date', className = '' }) {
   const [isOpen, setIsOpen] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
-  const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date());
+  const [viewDate, setViewDate] = useState(value ? new Date(value) : new Date('1990-01-01'));
   const yearListRef = useRef(null);
 
   const formatDate = (date) => {
@@ -39,16 +39,30 @@ export function DatePicker({ label, value, onChange, placeholder = 'Select date'
     setShowYearPicker(false);
   };
 
-  const years = Array.from({ length: 151 }, (_, i) => new Date().getFullYear() - 120 + i);
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 1930 + 1 }, (_, i) => 1930 + i);
+
+  const scrollToYear = () => {
+    if (yearListRef.current) {
+      const container = yearListRef.current;
+      const focusYear = value ? new Date(value).getFullYear() : 1990;
+      const targetEl = container.querySelector(`[data-year="${focusYear}"]`);
+      
+      if (targetEl) {
+        const containerHeight = container.offsetHeight;
+        const targetTop = targetEl.offsetTop;
+        const targetHeight = targetEl.offsetHeight;
+        container.scrollTop = targetTop - (containerHeight / 2) + (targetHeight / 2);
+      }
+    }
+  };
 
   useEffect(() => {
+    // Also keep the useEffect for when 'value' changes while already open
     if (showYearPicker && yearListRef.current) {
-        const currentYearElement = yearListRef.current.querySelector(`[data-year="${viewDate.getFullYear()}"]`);
-        if (currentYearElement) {
-            currentYearElement.scrollIntoView({ block: 'center', behavior: 'instant' });
-        }
+        scrollToYear();
     }
-  }, [showYearPicker, viewDate]);
+  }, [value]);
 
   const renderDays = () => {
     const year = viewDate.getFullYear();
@@ -162,6 +176,7 @@ export function DatePicker({ label, value, onChange, placeholder = 'Select date'
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
+                                onAnimationComplete={scrollToYear}
                                 className="h-[280px] overflow-y-auto pr-2 custom-scrollbar"
                                 ref={yearListRef}
                             >
