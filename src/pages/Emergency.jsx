@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
-import { ActivitySquare, PhoneCall, AlertOctagon, Navigation2, Copy, Ambulance, Phone, Contact2, Share2, LocateFixed, Loader2, Send } from 'lucide-react';
+import { ActivitySquare, PhoneCall, AlertOctagon, Navigation2, Copy, Ambulance, Phone, Contact2, Share2, LocateFixed, Loader2, Send, Droplet } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useHealthData } from '../controllers/useHealthData';
 import { MockService } from '../services/api/mockService';
@@ -12,9 +12,13 @@ import { useLongPress } from '../hooks/useLongPress';
 import { playSiren } from '../utils/audio';
 import { EmergencyContactsList } from '../components/contact/EmergencyContactsList';
 import { useLocationServices } from '../hooks/useLocationServices';
+import { useAuth } from '../context/AuthContext';
+import { FirstAidModal } from '../components/emergency/FirstAidModal';
+import { DigitalInsuranceCard } from '../components/medical/DigitalInsuranceCard';
 
 export default function Emergency() {
   const { t } = useTranslation();
+  const { userData } = useAuth();
   const { data: emergencyFacilities, loading, error } = useHealthData(MockService.getEmergencyFacilities);
   const { callAmbulance, isLocating, emergencyNumber, coordinates } = useEmergency();
   const { location, address, nearestHospital, loading: locLoading } = useLocationServices();
@@ -27,6 +31,8 @@ export default function Emergency() {
   
   const [smsSent, setSmsSent] = useState(false);
   const [isSirenActive, setIsSirenActive] = useState(false);
+  const [isFirstAidModalOpen, setIsFirstAidModalOpen] = useState(false);
+  const [isCardViewOpen, setIsCardViewOpen] = useState(false);
   const stopSirenRef = useRef(null);
 
   const handleCopyLink = () => {
@@ -161,7 +167,7 @@ export default function Emergency() {
               </div>
             </div>
 
-            <div className="mt-8 w-full max-w-sm">
+            <div className="mt-8 w-full max-sm">
               <button 
                 onClick={callAmbulance}
                 disabled={isLocating}
@@ -314,28 +320,115 @@ export default function Emergency() {
         </div>
 
         <div className="lg:col-span-5 xl:col-span-4 space-y-6">
-          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl p-8 shadow-xl">
-            <h3 className="text-xl font-bold mb-4 flex items-center gap-2 text-white">
-              <ActivitySquare className="w-5 h-5 text-blue-400" /> {t('emergency.essentialId')}
-            </h3>
+          <div className="bg-slate-900 border border-slate-700 text-white rounded-3xl p-8 shadow-xl relative overflow-hidden group">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-white">
+                <ActivitySquare className="w-5 h-5 text-blue-400" /> {t('emergency.essentialId')}
+              </h3>
+            </div>
+
+            <div className="mb-6 pb-6 border-b border-white/10">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Emergency Patient Identifier</p>
+              <h2 className="text-2xl font-black text-white tracking-tight leading-none mb-1">
+                {userData.firstName || userData.lastName ? `${userData.firstName} ${userData.lastName}` : '-'}
+              </h2>
+              <p className="text-sm font-bold text-blue-400">ID: {userData.patientId || '-'}</p>
+            </div>
+
+            <div className="mb-6 pb-6 border-b border-white/10 flex flex-col gap-2">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Medical Insurance</p>
+              {(!userData.insuranceData?.cardImage || (userData.insuranceData?.providerName && userData.insuranceData.providerName !== '-' && userData.insuranceData.providerName !== '')) && (
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Primary Provider</p>
+                    <p className="text-sm font-black text-white">{userData.insuranceData?.providerName || '-'}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Member ID</p>
+                      <p className="text-sm font-black text-blue-400">{userData.insuranceData?.memberId || '-'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Group Number</p>
+                      <p className="text-sm font-black text-white">{userData.insuranceData?.groupNumber || '-'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {userData.insuranceData?.cardImage && (
+                <button 
+                  onClick={() => setIsCardViewOpen(true)}
+                  className="mt-4 w-full bg-blue-600/10 border border-blue-400/20 text-blue-400 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <ActivitySquare className="w-4 h-4" />
+                  View Digital Card Photo
+                </button>
+              )}
+            </div>
+            
             <div className="space-y-6">
-              <div className="border-b border-white/10 pb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Blood Type</p>
-                <p className="text-2xl font-black text-red-400">O Positive (O+)</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border-b border-white/10 pb-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Blood Type</p>
+                  <p className="text-2xl font-black text-red-400">{userData.bloodType || '-'}</p>
+                </div>
+                <div className="border-b border-white/10 pb-4 text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-right">Weight / Height</p>
+                  <p className="text-sm font-bold text-white">
+                    {userData.weight ? `${userData.weight}kg` : '-'} / {userData.height ? `${userData.height}cm` : '-'}
+                  </p>
+                </div>
               </div>
-              <div className="border-b border-white/10 pb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Allergies</p>
-                <p className="text-sm font-bold">Penicillin, Peanuts, Latex</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border-b border-white/10 pb-4">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Donor Status</p>
+                  <p className={`text-sm font-bold ${
+                    userData.organDonor === 'Registered Donor' ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {userData.organDonor || 'Not Registered'}
+                  </p>
+                </div>
+                <div className="border-b border-white/10 pb-4 text-right">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-right">National ID</p>
+                  <p className="text-sm font-bold text-slate-300">{userData.nationalId || '-'}</p>
+                </div>
               </div>
+
+              <div className="border-b border-white/10 pb-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Known Allergies</p>
+                <p className="text-sm font-bold">
+                  {userData.allergies && userData.allergies.length > 0 
+                    ? userData.allergies.map(a => a.name).join(', ') 
+                    : '-'
+                  }
+                </p>
+              </div>
+
+              <div className="border-b border-white/10 pb-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Chronic Conditions</p>
+                <p className="text-sm font-bold">{userData.chronicConditions && userData.chronicConditions.length > 0 ? userData.chronicConditions.map(c => c.name).join(', ') : '-'}</p>
+              </div>
+
               <div className="border-b border-white/10 pb-4">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Current Medications</p>
-                <p className="text-sm font-bold">Lisinopril (10mg), Metformin (500mg)</p>
+                <p className="text-sm font-bold">
+                  {userData.prescriptions && userData.prescriptions.length > 0 
+                    ? userData.prescriptions.map(p => p.name).join(', ') 
+                    : '-'
+                  }
+                </p>
               </div>
+
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">Emergency Contacts</p>
                 <EmergencyContactsList variant="compact" />
               </div>
             </div>
+            
+            {/* Background elements */}
+            <Droplet className="absolute -bottom-10 -right-10 w-48 h-48 text-white/5 opacity-10 rotate-12 pointer-events-none" />
           </div>
 
           <div className="bg-glass rounded-3xl p-8 border-ghost shadow-sm">
@@ -353,11 +446,20 @@ export default function Emergency() {
                 <div className="w-8 h-8 shrink-0 bg-white rounded-lg flex items-center justify-center font-black text-[var(--color-primary)] border border-slate-100">3</div>
                 <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">If no response and no breathing, prepare to start CPR immediately.</p>
               </div>
-              <button className="w-full py-3 text-xs font-bold text-[var(--color-primary)] hover:bg-white/50 rounded-xl transition-colors">View All First Aid Guides</button>
+              <button 
+                onClick={() => setIsFirstAidModalOpen(true)}
+                className="w-full py-4 text-xs font-black text-blue-600 hover:bg-blue-50/50 rounded-2xl transition-all border border-transparent hover:border-blue-100 uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                <ActivitySquare className="w-4 h-4" />
+                View All First Aid Guides
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <FirstAidModal isOpen={isFirstAidModalOpen} onClose={() => setIsFirstAidModalOpen(false)} />
+      <DigitalInsuranceCard isOpen={isCardViewOpen} onClose={() => setIsCardViewOpen(false)} />
       </div>
     </DataState>
   );

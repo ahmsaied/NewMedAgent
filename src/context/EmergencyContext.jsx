@@ -10,17 +10,33 @@ export function EmergencyProvider({ children }) {
   const [error, setError] = useState(null);
   const [emergencyNumber, setEmergencyNumber] = useState(null);
   const [coordinates, setCoordinates] = useState(null);
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(() => {
+    const saved = localStorage.getItem('medagent_emergency_contacts');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   // Trigger on INITIAL APP LOAD (Global)
   useEffect(() => {
     determineLocation();
-    // Load initial empty DB instance
-    MockService.getEmergencyContacts().then(setContacts);
+    
+    // Only fetch from MockService if we have NO existing data in storage
+    const saved = localStorage.getItem('medagent_emergency_contacts');
+    if (!saved || JSON.parse(saved).length === 0) {
+      MockService.getEmergencyContacts().then(setContacts);
+    }
   }, []);
+
+  // Persist contacts whenever they change
+  useEffect(() => {
+    localStorage.setItem('medagent_emergency_contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
   const addContact = (newContact) => {
     setContacts(prev => [...prev, newContact]);
+  };
+
+  const updateContact = (id, updatedData) => {
+    setContacts(prev => prev.map(c => c.id === id ? { ...c, ...updatedData } : c));
   };
 
   const removeContact = (idToRemove) => {
@@ -89,7 +105,7 @@ export function EmergencyProvider({ children }) {
   };
 
   return (
-    <EmergencyContext.Provider value={{ callAmbulance, isLocating, error, emergencyNumber, coordinates, contacts, addContact, removeContact }}>
+    <EmergencyContext.Provider value={{ callAmbulance, isLocating, error, emergencyNumber, coordinates, contacts, addContact, updateContact, removeContact }}>
       {children}
     </EmergencyContext.Provider>
   );

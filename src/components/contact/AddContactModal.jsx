@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, UserPlus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, UserPlus, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { UniversalImagePicker } from '../ui/UniversalImagePicker';
 import { useEmergency } from '../../context/EmergencyContext';
@@ -9,9 +9,9 @@ const IOS_RELATIONSHIPS = [
   'Friend', 'Spouse', 'Partner', 'Assistant', 'Manager', 'Primary Physician', 'Specialist'
 ];
 
-export function AddContactModal({ isOpen, onClose }) {
+export function AddContactModal({ isOpen, onClose, contactToEdit = null }) {
   const { t } = useTranslation();
-  const { addContact } = useEmergency();
+  const { addContact, updateContact } = useEmergency();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -21,6 +21,20 @@ export function AddContactModal({ isOpen, onClose }) {
   });
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Sync form with contactToEdit whenever modal opens or contact changes
+  useEffect(() => {
+    if (contactToEdit) {
+      setFormData({
+        name: contactToEdit.name || '',
+        phone: contactToEdit.phone || '',
+        relation: contactToEdit.relation || 'Friend',
+        image: contactToEdit.avatar || null
+      });
+    } else {
+      setFormData({ name: '', phone: '', relation: 'Friend', image: null });
+    }
+  }, [contactToEdit, isOpen]);
 
   if (!isOpen) return null;
 
@@ -32,15 +46,23 @@ export function AddContactModal({ isOpen, onClose }) {
     e.preventDefault();
     if (!formData.name || !formData.phone) return;
 
-    addContact({
-      id: Date.now(),
+    const contactData = {
       name: formData.name,
       phone: formData.phone,
       relation: formData.relation,
       translatedRelationKey: formData.relation,
       avatar: formData.image,
       type: ['Primary Physician', 'Specialist'].includes(formData.relation) ? 'medical' : 'family'
-    });
+    };
+
+    if (contactToEdit) {
+      updateContact(contactToEdit.id, contactData);
+    } else {
+      addContact({
+        id: Date.now(),
+        ...contactData
+      });
+    }
 
     setFormData({ name: '', phone: '', relation: 'Friend', image: null });
     onClose();
@@ -57,7 +79,9 @@ export function AddContactModal({ isOpen, onClose }) {
       {/* Modal */}
       <div className="relative bg-white/90 backdrop-blur-3xl border border-white/40 shadow-2xl w-full max-w-md rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-6 border-b border-slate-200/50">
-          <h2 className="text-xl font-bold text-[#191c1e] tracking-tight">Add Emergency Contact</h2>
+          <h2 className="text-xl font-bold text-[#191c1e] tracking-tight">
+            {contactToEdit ? 'Edit Contact' : 'Add Emergency Contact'}
+          </h2>
           <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors">
             <X className="w-5 h-5 text-slate-500" />
           </button>
@@ -70,12 +94,12 @@ export function AddContactModal({ isOpen, onClose }) {
               onImageSelect={handleImageSelect}
               currentImage={formData.image}
               shape="circle"
-              label="Add Photo"
+              label={contactToEdit ? "Update Photo" : "Add Photo"}
               showAvatars={true}
             />
             <div className="flex flex-col items-center text-center">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Emergency Contact Avatar</span>
-              <p className="text-[10px] text-slate-400">Capture or upload photo</p>
+              <p className="text-[10px] text-slate-400">{contactToEdit ? "Change existing photo" : "Capture or upload photo"}</p>
             </div>
           </div>
 
@@ -120,8 +144,8 @@ export function AddContactModal({ isOpen, onClose }) {
             type="submit"
             className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold tracking-tight p-4 rounded-2xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/20 transition-all active:scale-[0.98]"
           >
-            <UserPlus className="w-5 h-5" />
-            Save Emergency Contact
+            {contactToEdit ? <Pencil className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+            {contactToEdit ? 'Update Contact' : 'Save Emergency Contact'}
           </button>
         </form>
       </div>

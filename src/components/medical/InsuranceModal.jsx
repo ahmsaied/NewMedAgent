@@ -26,33 +26,27 @@ export function InsuranceModal({ isOpen, onClose }) {
     setIsScanning(true);
     setScanError(false);
     
-    // Simulated AI extraction with conservative failure logic
+    // Simulated AI extraction with pure focus on demonstration
     setTimeout(() => {
-      // 90% failure rate to strictly enforce manual entry requirement as requested
-      const isSuccess = Math.random() > 0.9;
+      // Mock failure for demo, but crucially non-destructive to existing text
+      const isSuccess = false;
       
       if (isSuccess) {
-        setFormData(prev => ({
-          ...prev,
-          providerName: 'United Healthcare Plus',
-          memberId: 'UHC-8812003',
-          groupNumber: 'GA-992-11',
-          planType: 'Elite HMO'
-        }));
         setScanError(false);
       } else {
-        // STRICTLY leave fields empty on failure
+        // Add a dash '-' for missing data instead of dummy strings, 
+        // but preserve any existing data the user might have entered.
         setFormData(prev => ({
           ...prev,
-          providerName: '',
-          memberId: '',
-          groupNumber: '',
-          planType: ''
+          providerName: prev.providerName || '-',
+          memberId: prev.memberId || '-',
+          groupNumber: prev.groupNumber || '-',
+          planType: prev.planType || '-'
         }));
         setScanError(true);
       }
       setIsScanning(false);
-    }, 3200);
+    }, 2800);
   };
 
   const handleSave = () => {
@@ -140,8 +134,8 @@ export function InsuranceModal({ isOpen, onClose }) {
                       <div className="bg-white p-3 rounded-2xl shadow-xl mb-3">
                         <X className="w-6 h-6 text-red-600" />
                       </div>
-                      <p className="text-white text-xs font-black uppercase tracking-widest mb-1">Extraction Failed</p>
-                      <p className="text-white/80 text-[10px] font-bold leading-tight">Could not identify details. Please enter manually below.</p>
+                      <p className="text-white text-xs font-black uppercase tracking-widest mb-1">OCR Data Unavailable</p>
+                      <p className="text-white/80 text-[10px] font-bold leading-tight">Verification required. Please input insurance details manually.</p>
                       <button 
                         onClick={() => setIsScanning(false) || setScanError(false)}
                         className="mt-4 text-[9px] font-black uppercase tracking-widest text-white border border-white/40 px-3 py-1.5 rounded-full hover:bg-white/10 transition-all"

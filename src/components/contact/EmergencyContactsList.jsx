@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
-import { Phone, PhoneCall, Loader2, User, Trash2 } from 'lucide-react';
+import { Phone, PhoneCall, Loader2, User, Trash2, Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useEmergency } from '../../context/EmergencyContext';
+import { AddContactModal } from './AddContactModal';
 import maleAvatar from '../../assets/male-avatar.svg';
 
 export function EmergencyContactsList({ variant = 'compact', allowDelete = false }) {
   const { t } = useTranslation();
   const { contacts, removeContact } = useEmergency();
   const [contactToDelete, setContactToDelete] = useState(null);
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingContact, setEditingContact] = useState(null);
+
+  const handleEdit = (contact) => {
+    setEditingContact(contact);
+    setIsEditModalOpen(true);
+  };
 
   const confirmDelete = () => {
     if (contactToDelete) {
@@ -24,48 +33,91 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
     );
   }
 
-  if (variant === 'detailed') {
-    return (
-      <>
-        <div className="space-y-4 w-full">
+  return (
+    <>
+      <div className="space-y-4 w-full">
         {contacts.map((contact, index) => (
-          <div key={contact.id || index} className="bg-white p-5 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 group">
-            <div className="flex items-center gap-4">
-              {contact.avatar ? (
-                <img 
-                  src={contact.avatar} 
-                  alt={contact.name} 
-                  onError={(e) => { e.target.src = maleAvatar; }}
-                  className="w-12 h-12 rounded-full object-cover border-2 border-slate-100" 
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                  <User className="w-5 h-5" />
+          <div key={contact.id || index}>
+            {variant === 'detailed' ? (
+              <div className="bg-white p-5 rounded-3xl flex items-center justify-between shadow-sm border border-slate-100 group">
+                <div className="flex items-center gap-4">
+                  {contact.avatar ? (
+                    <img 
+                      src={contact.avatar} 
+                      alt={contact.name} 
+                      onError={(e) => { e.target.src = maleAvatar; }}
+                      className="w-12 h-12 rounded-full object-cover border-2 border-slate-100" 
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <User className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{contact.relation}</p>
+                    <p className="text-lg font-extrabold text-[#191c1e] tracking-tight">{contact.name}</p>
+                  </div>
                 </div>
-              )}
-              <div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{contact.relation}</p>
-                <p className="text-lg font-extrabold text-[#191c1e] tracking-tight">{contact.name}</p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleEdit(contact)}
+                    className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+                    title="Edit"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  {allowDelete && (
+                    <button
+                      onClick={() => setContactToDelete(contact)}
+                      className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-600 hover:text-white transition-colors shadow-sm"
+                      title={t('common.delete', 'Delete')}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                  <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`} className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm">
+                    <PhoneCall className="w-5 h-5" />
+                  </a>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              {allowDelete && (
-                <button
-                  onClick={() => setContactToDelete(contact)}
-                  className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-600 hover:text-white transition-colors shadow-sm"
-                  title={t('common.delete', 'Delete')}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              )}
-              <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`} className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm">
-                <PhoneCall className="w-5 h-5" />
-              </a>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  {contact.avatar ? (
+                    <img 
+                      src={contact.avatar} 
+                      alt={contact.name} 
+                      onError={(e) => { e.target.src = maleAvatar; }}
+                      className="w-10 h-10 rounded-full object-cover border border-slate-200" 
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                      <User className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-bold truncate">{contact.name}</p>
+                    <p className="text-[10px] opacity-60">{contact.relation} • {contact.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => handleEdit(contact)}
+                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                  </button>
+                  <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`}>
+                    <Phone className="w-4 h-4 text-blue-400 group-hover:text-white transition-colors cursor-pointer ml-1 shrink-0" />
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
 
+      {/* Delete Confirmation Modal */}
       {contactToDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div 
@@ -99,38 +151,13 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
           </div>
         </div>
       )}
-    </>
-  );
-  }
 
-  // compact variant for Emergency.jsx
-  return (
-    <div className="space-y-4 w-full">
-      {contacts.map((contact, index) => (
-        <div key={contact.id || index} className="flex items-center justify-between group">
-          <div className="flex items-center gap-3">
-            {contact.avatar ? (
-              <img 
-                src={contact.avatar} 
-                alt={contact.name} 
-                onError={(e) => { e.target.src = maleAvatar; }}
-                className="w-10 h-10 rounded-full object-cover border border-slate-200" 
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                <User className="w-4 h-4" />
-              </div>
-            )}
-            <div>
-              <p className="text-sm font-bold truncate">{contact.name}</p>
-              <p className="text-[10px] opacity-60">{contact.relation} • {contact.phone}</p>
-            </div>
-          </div>
-          <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`}>
-             <Phone className="w-4 h-4 text-blue-400 group-hover:text-white transition-colors cursor-pointer ml-3 shrink-0" />
-          </a>
-        </div>
-      ))}
-    </div>
+      {/* Edit Modal Hook */}
+      <AddContactModal 
+        isOpen={isEditModalOpen}
+        onClose={() => { setIsEditModalOpen(false); setEditingContact(null); }}
+        contactToEdit={editingContact}
+      />
+    </>
   );
 }

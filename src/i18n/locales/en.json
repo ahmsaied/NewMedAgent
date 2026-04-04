@@ -106,7 +106,7 @@
     "dosage": "Dosage",
     "frequency": "Frequency",
     "viewArchived": "View Archived Prescriptions",
-    "aiAdherence": "AI Adherence",
+    "aiAdherence": "Medicine Adherence",
     "excellent": "Excellent Compliance",
     "consistency": "Consistency is improving your metabolic response.",
     "past": "Past Records"
@@ -116,7 +116,7 @@
     "subtitle": "Upload your X-Ray, MRI, or CT scans for instant AI-assisted diagnostic insights. MedAgent utilizes deep neural networks to identify anomalies with 99.4% precision.",
     "viewDicom": "View DICOM",
     "drop": "Drop your medical scans here",
-    "support": "Support for DICOM, JPEG, and PNG formats. Maximum file size: 124MB per study.",
+    "support": "Support for DICOM, JPEG, and PNG formats. Maximum file size: 24MB per study.",
     "select": "Select Medical Files",
     "engine": "Ether AI Engine",
     "processing": "Processing v4.2 Active",
