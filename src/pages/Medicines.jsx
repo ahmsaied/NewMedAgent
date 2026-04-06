@@ -6,10 +6,21 @@ import { PageHeader } from '../components/ui/PageHeader';
 import { DataState } from '../components/ui/DataState';
 import { useAuth } from '../context/AuthContext';
 import { AddMedicineModal } from '../components/medical/AddMedicineModal';
+import { usePrescriptions } from '../hooks/usePrescriptions';
 
 export default function Medicines() {
   const { t } = useTranslation();
   const { userData, updateUser } = useAuth();
+  const {
+    activePrescriptions,
+    archivedPrescriptions,
+    handleToggleStatus,
+    handleAddMedicine: addMedicinesHook,
+    handleDelete,
+    handleToggleArchive,
+    lowSupplyPx
+  } = usePrescriptions();
+  
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState('today');
   const [isRefillDismissed, setIsRefillDismissed] = useState(false);
@@ -17,58 +28,29 @@ export default function Medicines() {
   const [showArchived, setShowArchived] = useState(false);
   const prescriptions = userData.prescriptions || [];
 
-  const handleToggleStatus = (id) => {
-    const updatedPrescriptions = prescriptions.map(px => 
-      px.id === id ? { ...px, status: px.status === 'completed' ? 'scheduled' : 'completed' } : px
-    );
-    updateUser({ prescriptions: updatedPrescriptions });
-  };
-
-  const handleAddMedicine = (newPx) => {
-    if (editingPx) {
-      const updated = prescriptions.map(px => px.id === newPx.id ? newPx : px);
-      updateUser({ prescriptions: updated });
-    } else {
-      updateUser({ prescriptions: [...prescriptions, newPx] });
-    }
-    setEditingPx(null);
-  };
-
-  const handleDelete = (id) => {
-    const updated = prescriptions.filter(px => px.id !== id);
-    updateUser({ prescriptions: updated });
-  };
-
-  const handleToggleArchive = (id) => {
-    const updated = prescriptions.map(px => 
-      px.id.toString() === id.toString() ? { ...px, archived: !px.archived } : px
-    );
-    updateUser({ prescriptions: updated });
-  };
-
   const handleEdit = (px) => {
     setEditingPx(px);
     setIsAddModalOpen(true);
   };
 
-  const activePrescriptions = prescriptions.filter(px => !px.archived);
-  const archivedPrescriptions = prescriptions.filter(px => px.archived);
-
-  const pendingRefills = activePrescriptions.filter(px => parseInt(px.supply || '30') < 7 && px.status !== 'refill_requested');
-  const authorizedRefills = activePrescriptions.filter(px => parseInt(px.supply || '30') < 7 && px.status === 'refill_requested');
-  const lowSupplyPx = pendingRefills[0] || authorizedRefills[0];
-
-  const handleApproveRefill = (id) => {
-    const updated = (userData.prescriptions || []).map(px => 
-      String(px.id) === String(id) ? { ...px, status: 'refill_requested' } : px
-    );
-    updateUser({ prescriptions: updated });
+  const handleAddMedicine = (newPx) => {
+    addMedicinesHook(newPx, editingPx?.id);
+    setEditingPx(null);
+    setIsAddModalOpen(false);
   };
 
   const handleExportCSV = () => {
     if (prescriptions.length === 0) return;
     
-    const headers = ['Name', 'Dosage', 'Type', 'Frequency', 'Next Dose', 'Supply (Days)', 'Status'];
+    const headers = [
+      t('medicines.csvHeaders.name'), 
+      t('medicines.csvHeaders.dosage'), 
+      t('medicines.csvHeaders.type'), 
+      t('medicines.csvHeaders.frequency'), 
+      t('medicines.csvHeaders.nextDose'), 
+      t('medicines.csvHeaders.supply'), 
+      t('medicines.csvHeaders.status')
+    ];
     const rows = prescriptions.map(px => [
       px.name,
       px.dosage || '-',
@@ -120,10 +102,10 @@ export default function Medicines() {
       <div className="grid grid-cols-12 gap-8 items-start">
         {/* Daily Timeline */}
         <section className="col-span-12 lg:col-span-8 space-y-8">
-          <div className="bg-glass border-ghost rounded-[2rem] p-8 shadow-[var(--shadow-liquid-hover)]">
+          <div className="card-premium">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-xl font-extrabold text-[#191c1e]">
-                {viewMode === 'today' ? t('medicines.dailyIntake') : 'Weekly Medications'}
+                {viewMode === 'today' ? t('medicines.dailyIntake') : t('medicines.weeklyMedications')}
               </h2>
               <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/50">
                 <button 
@@ -151,14 +133,14 @@ export default function Medicines() {
                   <Calendar className="w-8 h-8" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-slate-400">No Active Medications Scheduled</h3>
-                  <p className="text-xs font-bold text-slate-400/60 uppercase tracking-widest mt-1">Add your first script to start tracking</p>
+                  <h3 className="font-extrabold text-slate-400">{t('global.noMedications')}</h3>
+                  <p className="text-xs font-bold text-slate-400/60 uppercase tracking-widest mt-1">{t('global.addFirstScript')}</p>
                 </div>
                 <button 
                   onClick={() => setIsAddModalOpen(true)}
                   className="mt-2 text-xs font-black text-blue-600 bg-blue-50 px-6 py-2.5 rounded-full border border-blue-100 hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95"
                 >
-                  SET SCHEDULE
+                  {t('medicines.setSchedule')}
                 </button>
               </div>
             ) : (
@@ -166,7 +148,7 @@ export default function Medicines() {
                 {viewMode === 'week' && (
                   <div className="bg-slate-100/50 p-4 rounded-2xl mb-8 border border-slate-200/50">
                     <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">
-                      Weekly Schedule Overview • Next 7 Days
+                      {t('medicines.weeklyOverview')}
                     </p>
                   </div>
                 )}
@@ -202,7 +184,7 @@ export default function Medicines() {
                                 px.time.includes('Noon') ? t('medicines.takeNoon') : 
                                 t('medicines.takeNight')
                               ) : (
-                                `Scheduled: ${px.freq}`
+                                `${t('medicines.scheduled')}: ${px.freq}`
                               )}
                             </p>
                           </div>
@@ -210,14 +192,14 @@ export default function Medicines() {
                            <button 
                              onClick={() => handleEdit(px)}
                              className="w-10 h-10 rounded-2xl flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-blue-50 hover:text-blue-600 border border-slate-100 transition-all"
-                             title="Edit Prescription"
+                             title={t('medicines.editPrescription')}
                            >
                              <Pencil className="w-4 h-4" />
                            </button>
                            <button 
                              onClick={() => handleDelete(px.id)}
                              className="w-10 h-10 rounded-2xl flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-red-50 hover:text-red-600 border border-slate-100 transition-all"
-                             title="Delete Record"
+                             title={t('medicines.deleteRecord')}
                            >
                              <Trash2 className="w-4 h-4" />
                            </button>
@@ -256,12 +238,16 @@ export default function Medicines() {
                     <AlertTriangle className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black mb-2 tracking-tight">Refill Awareness Alert</h3>
+                    <h3 className="text-2xl font-black mb-2 tracking-tight">{t('global.refillAlert')}</h3>
                     <p className="text-blue-50/90 max-w-md font-medium leading-relaxed">
-                      Your <strong>{lowSupplyPx.name}</strong> is running low (<strong>{lowSupplyPx.supply} days left</strong>). 
+                      {t('medicines.lowSupplyAlert', { 
+                        name: lowSupplyPx.name, 
+                        supply: lowSupplyPx.supply, 
+                        unit: lowSupplyPx.unit || 'units' 
+                      })} 
                       {parseInt(lowSupplyPx.supply || '0') <= 3 
-                        ? ' Urgent action required to maintain your schedule.' 
-                        : ' Consider updating your supply to avoid disruption.'}
+                        ? ` ${t('medicines.urgentRefill')}` 
+                        : ` ${t('medicines.considerRefill')}`}
                     </p>
                   </div>
                 </div>
@@ -269,7 +255,7 @@ export default function Medicines() {
                   {lowSupplyPx.status === 'refill_requested' ? (
                     <div className="flex items-center gap-3 bg-white/20 backdrop-blur-md px-8 py-3 rounded-full border border-white/30 text-white font-bold">
                       <Check className="w-5 h-5 text-blue-100" />
-                      Refill Authorized
+                      {t('medicines.refillAuthorized')}
                     </div>
                   ) : (
                     <button 
@@ -278,7 +264,7 @@ export default function Medicines() {
                       className="relative z-20 cursor-pointer bg-white text-blue-600 px-8 py-3 rounded-full font-bold hover:bg-opacity-90 hover:scale-[1.02] transition-all shadow-sm active:scale-95 group/btn flex items-center justify-center gap-2"
                     >
                       <span className="relative z-30">
-                        {parseInt(lowSupplyPx.supply || '0') <= 3 ? 'Authorize Refill' : 'Update Stock'}
+                        {parseInt(lowSupplyPx.supply || '0') <= 3 ? t('medicines.authorizeRefill') : t('medicines.updateStock')}
                       </span>
                       <Check className="w-5 h-5 opacity-0 group-hover/btn:opacity-100 transition-opacity relative z-30" />
                     </button>
@@ -300,11 +286,11 @@ export default function Medicines() {
           <div className="bg-glass border-ghost rounded-[2.5rem] p-6 shadow-sm min-h-[400px]">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-extrabold text-[#191c1e]">
-                {showArchived ? 'Archived Prescriptions' : t('medicines.active')}
+                {showArchived ? t('medicines.archived') : t('medicines.active')}
               </h2>
               {showArchived && (
                 <span className="text-[10px] font-black px-2 py-0.5 rounded bg-slate-100 text-slate-500 uppercase tracking-widest">
-                  History Mode
+                  {t('medicines.historyMode')}
                 </span>
               )}
             </div>
@@ -313,7 +299,7 @@ export default function Medicines() {
               <div className="py-12 border-2 border-dashed border-slate-100 rounded-[2rem] flex flex-col items-center justify-center text-center px-4">
                 <LayoutGrid className="w-8 h-8 text-slate-200 mb-3" />
                 <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-relaxed">
-                  {showArchived ? 'No archived medications found.' : 'Your active list is currently empty.'}
+                  {showArchived ? t('medicines.noArchived') : t('medicines.noActiveDesc')}
                 </p>
               </div>
             ) : (
@@ -338,22 +324,22 @@ export default function Medicines() {
                           {px.type}
                         </span>
                         <div className="flex gap-2">
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleArchive(px.id);
-                            }}
-                            className={`p-1.5 rounded-lg transition-colors ${showArchived ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:bg-slate-100'}`}
-                            title={showArchived ? "Unarchive Prescription" : "Archive Record"}
-                          >
-                            <Calendar className="w-4 h-4" />
-                          </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleToggleArchive(px.id);
+                              }}
+                              className={`p-1.5 rounded-lg transition-colors ${showArchived ? 'text-blue-600 hover:bg-blue-50' : 'text-slate-400 hover:bg-slate-100'}`}
+                              title={showArchived ? t('medicines.unarchive') : t('medicines.archiveRecord')}
+                            >
+                              <Calendar className="w-4 h-4" />
+                            </button>
                         </div>
                       </div>
                       <h3 className="font-extrabold text-[#191c1e] text-lg group-hover:text-blue-600 transition-colors leading-tight">
                         {px.name}
                       </h3>
-                      <p className="text-xs font-bold text-slate-500 mb-4 tracking-wide">{px.desc || 'General Health Support'}</p>
+                      <p className="text-xs font-bold text-slate-500 mb-4 tracking-wide">{px.desc || t('global.generalHealthSupport')}</p>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div className="bg-white/50 p-3 rounded-xl border border-slate-100/50 text-center">
@@ -381,7 +367,7 @@ export default function Medicines() {
                 : 'border-slate-200 bg-slate-50/50 text-slate-500 hover:border-blue-300 hover:text-blue-600'
               }`}
             >
-              {showArchived ? 'View Active Prescriptions' : t('medicines.viewArchived')}
+              {showArchived ? t('medicines.viewActive') : t('medicines.viewArchived')}
             </button>
           </div>
 
@@ -411,7 +397,7 @@ export default function Medicines() {
                 <span className="absolute text-[10px] font-black text-[#191c1e]">{adherenceRate}%</span>
               </div>
               <div>
-                <p className="text-sm font-bold text-[#191c1e]">{adherenceRate > 80 ? t('medicines.excellent') : 'Stable'}</p>
+                <p className="text-sm font-bold text-[#191c1e]">{adherenceRate > 80 ? t('medicines.excellent') : t('medicines.stable')}</p>
                 <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-snug uppercase tracking-tight">{t('medicines.consistency')} • {completedCount}/{prescriptions.length}</p>
               </div>
             </div>

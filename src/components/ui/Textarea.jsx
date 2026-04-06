@@ -5,7 +5,7 @@ export const Textarea = React.forwardRef(({ label, id, className = '', ...props 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
       {label && (
-        <label htmlFor={id} className="text-sm font-inter text-[var(--color-on-surface-variant)] ml-2 uppercase font-black tracking-widest text-[10px]">
+        <label htmlFor={id} className="text-sm font-inter text-[var(--color-on-surface-variant)] ms-2 uppercase font-black tracking-widest text-[10px]">
           {label}
         </label>
       )}

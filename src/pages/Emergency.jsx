@@ -127,8 +127,8 @@ export default function Emergency() {
             <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full flex items-center gap-3 shadow-xl z-20 animate-in slide-in-from-top fade-in duration-300">
               <Send className="w-5 h-5 animate-pulse" />
               <div className="flex flex-col">
-                <span className="text-sm font-black tracking-widest uppercase">Emergency SMS Dispatched</span>
-                <span className="text-[10px] opacity-90">Locations sent to your registered Emergency Contacts</span>
+                <span className="text-sm font-black tracking-widest uppercase">{t('global.smsDispatched')}</span>
+                <span className="text-[10px] opacity-90">{t('global.locSent')}</span>
               </div>
             </div>
           )}
@@ -147,22 +147,22 @@ export default function Emergency() {
                   <AlertOctagon className="w-16 h-16 lg:w-20 lg:h-20 mb-2" />
                 )}
                 
-                <span className="text-4xl lg:text-5xl font-black tracking-tighter shadow-sm">{isLocating ? 'LOCATING' : sosPress.isPressing ? sosPress.timeLeft : 'SOS'}</span>
+                <span className="text-4xl lg:text-5xl font-black tracking-tighter shadow-sm">{isLocating ? t('emergency.locating') : sosPress.isPressing ? sosPress.timeLeft : 'SOS'}</span>
                 <span className="text-[10px] lg:text-xs font-bold uppercase tracking-[0.2em] mt-3 opacity-90 text-center px-4">
-                  {isLocating ? 'Finding Hotline...' : sosPress.isPressing ? `ALARM IN ${sosPress.timeLeft} SECONDS` : t('emergency.sosHold')}
+                  {isLocating ? t('emergency.findingHotline') : sosPress.isPressing ? t('emergency.alarmIn', { seconds: sosPress.timeLeft }) : t('emergency.sosHold')}
                 </span>
               </button>
             </div>
             <div className="max-w-md mx-auto">
               {isLocating ? (
-                <p className="font-bold text-red-600 mb-4 uppercase tracking-widest text-xs animate-pulse">Requesting Exact Geographic Coordinates...</p>
+                <p className="font-bold text-red-600 mb-4 uppercase tracking-widest text-xs animate-pulse">{t('emergency.requestingCoordinates')}</p>
               ) : (
                 <p className="font-bold text-red-600 mb-4 uppercase tracking-widest text-xs">{t('emergency.activating')}</p>
               )}
               <div className="flex flex-wrap justify-center gap-8 text-sm text-[var(--color-on-surface-variant)] font-bold">
                 <span className="flex items-center gap-2"><Share2 className="w-4 h-4"/> {t('emergency.liveLoc')}</span>
                 <span className="flex items-center gap-2 text-slate-400">
-                  <Contact2 className="w-4 h-4"/> Call Emergency Contact
+                  <Contact2 className="w-4 h-4"/> {t('emergency.callEmergencyContact')}
                 </span>
               </div>
             </div>
@@ -174,7 +174,7 @@ export default function Emergency() {
                 className="flex items-center justify-center gap-3 w-full px-6 py-4 bg-red-50 text-red-600 rounded-2xl hover:bg-red-100 transition-colors font-extrabold text-lg shadow-sm border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLocating ? <Loader2 className="w-6 h-6 animate-spin"/> : <PhoneCall className="w-6 h-6"/>}
-                Ambulance: {emergencyNumber}
+                {t('emergency.ambulance')}: {emergencyNumber}
               </button>
             </div>
           </div>
@@ -218,11 +218,11 @@ export default function Emergency() {
                   <p className="text-sm text-[var(--color-on-surface-variant)] mb-2">{facility.details}</p>
                   {facility.arrivalMinutes && (
                     <p className="text-xs font-extrabold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-1">
-                      <Loader2 className="w-3 h-3 animate-spin"/> Estimated Arrival: {facility.arrivalMinutes} - {facility.arrivalMinutes + 4} mins
+                      <Loader2 className="w-3 h-3 animate-spin"/> {t('emergency.estimatedArrival')}: {facility.arrivalMinutes} - {facility.arrivalMinutes + 4} {t('emergency.mins')}
                     </p>
                   )}
                   {!facility.arrivalMinutes && facility.type === 'ambulance' && (
-                    <p className="text-sm text-[var(--color-on-surface-variant)] mb-4">Estimated arrival: 8-12 mins</p>
+                    <p className="text-sm text-[var(--color-on-surface-variant)] mb-4">{t('emergency.estimatedArrival')}: 8-12 {t('emergency.mins')}</p>
                   )}
                   {!facility.arrivalMinutes && facility.type !== 'ambulance' && (
                     <div className="mb-4 h-4"></div>
@@ -278,7 +278,7 @@ export default function Emergency() {
                   </iframe>
                 ) : (
                   <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold uppercase tracking-widest text-xs">
-                    {locLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Map Unavailable or Access Denied'}
+                    {locLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : t('emergency.mapUnavailable')}
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -292,14 +292,14 @@ export default function Emergency() {
               </div>
               <div className="w-full md:w-1/2 space-y-4">
                 <div>
-                  <p className="text-[10px] font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-1">Precise Address</p>
-                  <p className="text-lg font-bold leading-snug">{address || (locLoading ? 'Locating...' : 'Address unavailable')}</p>
+                  <p className="text-[10px] font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-1">{t('global.preciseAddress')}</p>
+                  <p className="text-lg font-bold leading-snug">{address || (locLoading ? t('global.processing') + '...' : t('emergency.addressUnavailable'))}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-[10px] font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-1">Coordinates</p>
+                    <p className="text-[10px] font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-1">{t('global.coordinates')}</p>
                     <p className="text-sm font-bold">
-                      {location ? `${location.lat.toFixed(4)}° ${location.lat > 0 ? 'N' : 'S'}, ${Math.abs(location.lng).toFixed(4)}° ${location.lng > 0 ? 'E' : 'W'}` : (locLoading ? 'Locating...' : 'Unavailable')}
+                      {location ? `${location.lat.toFixed(4)}° ${location.lat > 0 ? 'N' : 'S'}, ${Math.abs(location.lng).toFixed(4)}° ${location.lng > 0 ? 'E' : 'W'}` : (locLoading ? t('global.processing') + '...' : t('emergency.addressUnavailable'))}
                     </p>
                   </div>
                   <div>
@@ -312,7 +312,7 @@ export default function Emergency() {
                   disabled={!location}
                   className="w-full flex items-center justify-center gap-2 py-3 bg-white/50 border border-white text-[var(--color-on-surface)] rounded-xl font-bold text-sm shadow-sm hover:bg-white/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Copy className="w-4 h-4" /> Copy Share Link
+                  <Copy className="w-4 h-4" /> {t('emergency.copyShareLink')}
                 </button>
               </div>
             </div>
@@ -328,7 +328,7 @@ export default function Emergency() {
             </div>
 
             <div className="mb-6 pb-6 border-b border-white/10">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Emergency Patient Identifier</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('global.patientId')}</p>
               <h2 className="text-2xl font-black text-white tracking-tight leading-none mb-1">
                 {userData.firstName || userData.lastName ? `${userData.firstName} ${userData.lastName}` : '-'}
               </h2>
@@ -336,20 +336,20 @@ export default function Emergency() {
             </div>
 
             <div className="mb-6 pb-6 border-b border-white/10 flex flex-col gap-2">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Medical Insurance</p>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{t('medicalId.medicalInsurance')}</p>
               {(!userData.insuranceData?.cardImage || (userData.insuranceData?.providerName && userData.insuranceData.providerName !== '-' && userData.insuranceData.providerName !== '')) && (
                 <div className="space-y-3">
                   <div>
-                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Primary Provider</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">{t('global.primaryProvider')}</p>
                     <p className="text-sm font-black text-white">{userData.insuranceData?.providerName || '-'}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Member ID</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">{t('medicalId.memberId')}</p>
                       <p className="text-sm font-black text-blue-400">{userData.insuranceData?.memberId || '-'}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">Group Number</p>
+                    <div className="text-end">
+                      <p className="text-[9px] font-bold uppercase tracking-widest opacity-40 mb-0.5">{t('medicalId.groupNumber')}</p>
                       <p className="text-sm font-black text-white">{userData.insuranceData?.groupNumber || '-'}</p>
                     </div>
                   </div>
@@ -362,7 +362,7 @@ export default function Emergency() {
                   className="mt-4 w-full bg-blue-600/10 border border-blue-400/20 text-blue-400 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center gap-2 shadow-sm"
                 >
                   <ActivitySquare className="w-4 h-4" />
-                  View Digital Card Photo
+                  {t('emergency.viewDigitalCardPhoto')}
                 </button>
               )}
             </div>
@@ -370,34 +370,34 @@ export default function Emergency() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="border-b border-white/10 pb-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Blood Type</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">{t('medicalId.bloodType')}</p>
                   <p className="text-2xl font-black text-red-400">{userData.bloodType || '-'}</p>
                 </div>
-                <div className="border-b border-white/10 pb-4 text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-right">Weight / Height</p>
+                <div className="border-b border-white/10 pb-4 text-end">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-end">{t('emergency.weightHeight')}</p>
                   <p className="text-sm font-bold text-white">
-                    {userData.weight ? `${userData.weight}kg` : '-'} / {userData.height ? `${userData.height}cm` : '-'}
+                    {userData.weight ? `${userData.weight}${t('global.kg')}` : '-'} / {userData.height ? `${userData.height}${t('global.cm')}` : '-'}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="border-b border-white/10 pb-4">
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Donor Status</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">{t('emergency.donorStatus')}</p>
                   <p className={`text-sm font-bold ${
                     userData.organDonor === 'Registered Donor' ? 'text-emerald-400' : 'text-red-400'
                   }`}>
-                    {userData.organDonor || 'Not Registered'}
+                    {userData.organDonor || t('medicalId.notRegistered')}
                   </p>
                 </div>
-                <div className="border-b border-white/10 pb-4 text-right">
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-right">National ID</p>
+                <div className="border-b border-white/10 pb-4 text-end">
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1 text-end">{t('medicalId.nationalId')}</p>
                   <p className="text-sm font-bold text-slate-300">{userData.nationalId || '-'}</p>
                 </div>
               </div>
 
               <div className="border-b border-white/10 pb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Known Allergies</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">{t('medicalId.knownAllergies')}</p>
                 <p className="text-sm font-bold">
                   {userData.allergies && userData.allergies.length > 0 
                     ? userData.allergies.map(a => a.name).join(', ') 
@@ -407,12 +407,12 @@ export default function Emergency() {
               </div>
 
               <div className="border-b border-white/10 pb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Chronic Conditions</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">{t('medicalId.chronicConditions')}</p>
                 <p className="text-sm font-bold">{userData.chronicConditions && userData.chronicConditions.length > 0 ? userData.chronicConditions.map(c => c.name).join(', ') : '-'}</p>
               </div>
 
               <div className="border-b border-white/10 pb-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Current Medications</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">{t('medicalId.activeMeds')}</p>
                 <p className="text-sm font-bold">
                   {userData.prescriptions && userData.prescriptions.length > 0 
                     ? userData.prescriptions.map(p => p.name).join(', ') 
@@ -422,8 +422,8 @@ export default function Emergency() {
               </div>
 
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">Emergency Contacts</p>
-                <EmergencyContactsList variant="compact" />
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-2">{t('emergency.emergencyContactsTitle')}</p>
+                <EmergencyContactsList variant="compact" allowEdit={false} />
               </div>
             </div>
             
@@ -432,26 +432,26 @@ export default function Emergency() {
           </div>
 
           <div className="bg-glass rounded-3xl p-8 border-ghost shadow-sm">
-            <h3 className="font-bold mb-4">First Aid Instructions</h3>
+            <h3 className="font-bold mb-4">{t('emergency.firstAidTitle')}</h3>
             <div className="space-y-4">
               <div className="flex gap-4 p-3 rounded-xl bg-white/50">
                 <div className="w-8 h-8 shrink-0 bg-white rounded-lg flex items-center justify-center font-black text-[var(--color-primary)] border border-slate-100">1</div>
-                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">Check surroundings for immediate danger to yourself or the patient.</p>
+                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">{t('emergency.step1')}</p>
               </div>
               <div className="flex gap-4 p-3 rounded-xl bg-white/50">
                 <div className="w-8 h-8 shrink-0 bg-white rounded-lg flex items-center justify-center font-black text-[var(--color-primary)] border border-slate-100">2</div>
-                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">Assess responsiveness. Tap shoulder and ask loudly if they are okay.</p>
+                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">{t('emergency.step2')}</p>
               </div>
               <div className="flex gap-4 p-3 rounded-xl bg-white/50">
                 <div className="w-8 h-8 shrink-0 bg-white rounded-lg flex items-center justify-center font-black text-[var(--color-primary)] border border-slate-100">3</div>
-                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">If no response and no breathing, prepare to start CPR immediately.</p>
+                <p className="text-xs font-bold text-[var(--color-on-surface-variant)]">{t('emergency.step3')}</p>
               </div>
               <button 
                 onClick={() => setIsFirstAidModalOpen(true)}
                 className="w-full py-4 text-xs font-black text-blue-600 hover:bg-blue-50/50 rounded-2xl transition-all border border-transparent hover:border-blue-100 uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 <ActivitySquare className="w-4 h-4" />
-                View All First Aid Guides
+                  {t('emergency.viewAllGuides')}
               </button>
             </div>
           </div>

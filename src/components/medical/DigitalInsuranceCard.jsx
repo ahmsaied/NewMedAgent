@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Shield, Camera, Share2, Wallet, FileText, QrCode, CheckCircle2, Copy, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 export function DigitalInsuranceCard({ isOpen, onClose }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
   const { userData } = useAuth();
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
@@ -73,8 +76,8 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
           <div className="flex-1 overflow-y-auto pointer-events-auto custom-scrollbar p-6 pt-16">
             {/* Close Button */}
             <button 
-              onClick={onClose} 
-              className="absolute -top-1 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all border border-white/10 z-50 shadow-2xl"
+              onClick={onClose}
+              className={`absolute -top-1 ${isRtl ? 'left-6' : 'right-6'} p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all border border-white/10 z-50 shadow-2xl`}
             >
               <X className="w-6 h-6" />
             </button>
@@ -90,9 +93,9 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                   className="w-full aspect-video rounded-[2.5rem] overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.5)] border border-white/10 bg-slate-800 relative"
                 >
                   <img src={data.cardImage} alt="Insurance Card Photo" className="w-full h-full object-cover" />
-                  <div className="absolute top-6 left-6 bg-emerald-500/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 flex items-center gap-2 shadow-lg">
+                  <div className={`absolute top-6 ${isRtl ? 'right-6' : 'left-6'} bg-emerald-500/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/20 flex items-center gap-2 shadow-lg`}>
                     <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <span className="text-[10px] font-black text-white uppercase tracking-widest">Verified Document</span>
+                    <span className="text-[10px] font-black text-white uppercase tracking-widest">{t('medicalId.verifiedDocument')}</span>
                   </div>
                 </motion.div>
               ) : (
@@ -115,17 +118,17 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                         </div>
                         <div>
                           <h3 className="text-sm font-black tracking-[0.2em] uppercase opacity-60">MedAgent</h3>
-                          <h2 className="text-xl font-extrabold tracking-tight">Insurance ID</h2>
+                          <h2 className="text-xl font-extrabold tracking-tight">{t('medicalId.insuranceId')}</h2>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/80 px-3 py-1.5 rounded-lg border border-white/10">Active Card</span>
+                      <div className="text-end">
+                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-500/80 px-3 py-1.5 rounded-lg border border-white/10">{t('medicalId.activeCard')}</span>
                       </div>
                     </div>
 
                     {/* Provider Info */}
                     <div className="mt-12 space-y-1 relative z-10">
-                      <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{data.providerName || 'No Data Provided'}</p>
+                      <p className="text-[10px] font-black text-white/50 uppercase tracking-widest">{data.providerName || t('medicalId.noData')}</p>
                       <h1 className="text-2xl font-bold tracking-tight">{userData.firstName} {userData.lastName}</h1>
                     </div>
 
@@ -133,11 +136,11 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                     <div className="absolute bottom-0 inset-x-0 p-8 pt-0 flex justify-between items-end relative z-10">
                       <div className="flex gap-10">
                          <div>
-                           <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Member ID</p>
+                           <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">{t('medicalId.memberId')}</p>
                            <p className="font-mono text-sm font-bold tracking-wider">{data.memberId || '---- ---- ----'}</p>
                          </div>
                          <div>
-                           <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Group #</p>
+                           <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">{t('medicalId.groupNumber')}</p>
                            <p className="font-mono text-sm font-bold tracking-wider">{data.groupNumber || '----'}</p>
                          </div>
                       </div>
@@ -148,21 +151,21 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
 
             {/* Actions Section - Only Wallet and Share, No Toggles if has Photo */}
             <div className="mt-10 grid grid-cols-2 gap-4">
-              <button 
-                onClick={handleAddToWallet}
-                disabled={isAdded}
-                className={`p-5 rounded-3xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl group border-2 ${isAdded ? 'bg-emerald-500 border-white text-white' : 'bg-white border-transparent text-[#191c1e]'}`}
-              >
-                {isAdded ? <CheckCircle2 className="w-6 h-6 animate-bounce" /> : <Wallet className="w-6 h-6" />}
-                <span className="text-sm font-black uppercase tracking-widest text-[9px]">{isAdded ? 'Added!' : 'Add Wallet'}</span>
-              </button>
-              <button 
-                onClick={() => setIsShareOpen(true)}
-                className="bg-white p-5 rounded-3xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl group hover:bg-slate-50 border-2 border-transparent"
-              >
-                <Share2 className="w-6 h-6 text-[#191c1e]" />
-                <span className="text-sm font-black text-[#191c1e] uppercase tracking-widest text-[9px]">Share</span>
-              </button>
+                <button 
+                  onClick={handleAddToWallet}
+                  disabled={isAdded}
+                  className={`p-5 rounded-3xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl group border-2 ${isAdded ? 'bg-emerald-500 border-white text-white' : 'bg-white border-transparent text-[#191c1e]'}`}
+                >
+                  {isAdded ? <CheckCircle2 className="w-6 h-6 animate-bounce" /> : <Wallet className="w-6 h-6" />}
+                  <span className="text-sm font-black uppercase tracking-widest text-[9px]">{isAdded ? t('medicalId.added') : t('medicalId.addWallet')}</span>
+                </button>
+                <button 
+                  onClick={() => setIsShareOpen(true)}
+                  className="bg-white p-5 rounded-3xl flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl group hover:bg-slate-50 border-2 border-transparent"
+                >
+                  <Share2 className="w-6 h-6 text-[#191c1e]" />
+                  <span className="text-sm font-black text-[#191c1e] uppercase tracking-widest text-[9px]">{t('chat.translate')}</span>
+                </button>
             </div>
           </div>
         </div>
@@ -187,15 +190,15 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                 {/* Close */}
                 <button 
                   onClick={() => setIsShareOpen(false)}
-                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors"
+                  className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} p-2 rounded-full hover:bg-slate-100 transition-colors`}
                 >
                   <X className="w-5 h-5 text-slate-400" />
                 </button>
 
                 <div className="text-center space-y-6">
                   <div className="space-y-1">
-                    <h2 className="text-xl font-black text-slate-900 tracking-tight">Share Insurance</h2>
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Digital Access Token</p>
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">{t('medicalId.shareInsurance')}</h2>
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('medicalId.digitalAccessToken')}</p>
                   </div>
 
                   {/* QR Code Section */}
@@ -203,17 +206,17 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                     <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem]" />
                     <img 
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MedAgent-Insurance-${userData.firstName}-${data.memberId || 'GUEST'}`} 
-                      alt="Scannable QR Code"
+                      alt={t('medicalId.scannableQr')}
                       className="w-full h-full object-contain rounded-xl"
                     />
                   </div>
 
                   {/* Info Card Preview */}
-                  <div className="bg-slate-900 rounded-[2rem] p-6 text-left border border-white/10 shadow-lg relative overflow-hidden">
+                  <div className="bg-slate-900 rounded-[2rem] p-6 text-start border border-white/10 shadow-lg relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/20 blur-3xl rounded-full" />
                     <div className="flex items-center gap-3 mb-4">
                       <Shield className="w-5 h-5 text-blue-400" />
-                      <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Medical ID Verified</span>
+                      <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{t('medicalId.medicalIdVerified')}</span>
                     </div>
                     <h3 className="text-white font-bold tracking-tight mb-1">{userData.firstName} {userData.lastName}</h3>
                     <p className="text-[9px] font-black text-white/50 uppercase tracking-tighter">{data.memberId || 'XXXX XXXX XXXX'}</p>
@@ -226,19 +229,19 @@ export function DigitalInsuranceCard({ isOpen, onClose }) {
                       className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${isCopied ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                     >
                       {isCopied ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                      {isCopied ? 'Copied' : 'Copy Link'}
+                      {isCopied ? t('global.copied') : t('global.copyLink')}
                     </button>
                     <button 
                       onClick={handleSaveImage}
                       className={`flex items-center justify-center gap-2 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${isSaved ? 'bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'}`}
                     >
                       {isSaved ? <CheckCircle2 className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-                      {isSaved ? 'Saved!' : 'Save Image'}
+                      {isSaved ? t('global.saved') : t('global.saveSession')}
                     </button>
                   </div>
 
                   <p className="text-[10px] text-slate-400 font-bold px-4 leading-relaxed">
-                    This link will expire in 24 hours. Shared data is encrypted and accessible only to authorized healthcare providers.
+                    {t('medicalId.expiryNote')}
                   </p>
                 </div>
               </motion.div>

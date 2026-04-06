@@ -6,7 +6,7 @@ import femaleAvatar from '../../assets/female-avatar.svg';
 import maleAvatar from '../../assets/male-avatar.svg';
 import { useTranslation } from 'react-i18next';
 
-export function DoctorCard({ doc }) {
+export function DoctorCard({ doc, onCall, onBook, onSchedule, onMessage }) {
   const { t } = useTranslation();
   const isOnline = doc.status === 'ONLINE';
   const isBusy = doc.status === 'BUSY';
@@ -19,7 +19,7 @@ export function DoctorCard({ doc }) {
           <img alt={doc.name} className="w-20 h-20 rounded-2xl object-cover grayscale group-hover:grayscale-0 transition-all border border-[rgba(158,181,200,0.15)] shadow-sm" src={doc.avatarUrl || (doc.gender === 'F' ? femaleAvatar : maleAvatar)} />
           <span className={`absolute -bottom-2 -right-2 w-6 h-6 border-4 border-white rounded-full ${isOnline ? 'bg-green-500' : isBusy ? 'bg-amber-500' : 'bg-slate-300'}`}></span>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <div className={`text-xs font-bold px-3 py-1 rounded-full inline-block ${isOnline ? 'bg-blue-100 text-[var(--color-primary)]' : isBusy ? 'bg-slate-100 text-slate-500' : 'bg-slate-100 text-slate-400'}`}>
             {t(`doctors.${doc.status.toLowerCase()}`)}
           </div>
@@ -39,7 +39,10 @@ export function DoctorCard({ doc }) {
 
       <div className="flex gap-3 mt-auto relative">
         {isOnline || isBusy ? (
-          <button className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${isOnline ? 'bg-[var(--color-primary)] text-white hover:bg-opacity-90' : 'bg-blue-50 text-[var(--color-primary)] hover:bg-blue-100'}`}>
+          <button 
+            onClick={() => isOnline ? onCall?.(doc) : onBook?.(doc)}
+            className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 ${isOnline ? 'bg-[var(--color-primary)] text-white hover:bg-opacity-90' : 'bg-blue-50 text-[var(--color-primary)] hover:bg-blue-100'}`}
+          >
             {isOnline ? t('doctors.callNow') : t('doctors.bookSlot')}
           </button>
         ) : (
@@ -47,7 +50,20 @@ export function DoctorCard({ doc }) {
             {t('doctors.unavailable')}
           </button>
         )}
-        <button className="p-3 border border-slate-200/60 bg-white/60 rounded-xl text-[var(--color-primary)] hover:bg-blue-50 transition-colors">
+        
+        <button 
+          onClick={() => onMessage?.(doc)}
+          className="p-3 border border-slate-200/60 bg-white/60 rounded-xl text-[var(--color-primary)] hover:bg-blue-50 transition-colors"
+          title={t('doctors.sendQuickMessage')}
+        >
+          <MessageCircle className="w-5 h-5" />
+        </button>
+
+        <button 
+          onClick={() => onSchedule?.(doc)}
+          className="p-3 border border-slate-200/60 bg-white/60 rounded-xl text-[var(--color-primary)] hover:bg-blue-50 transition-colors"
+          title={t('doctors.viewSchedule')}
+        >
           <Calendar className="w-5 h-5" />
         </button>
       </div>

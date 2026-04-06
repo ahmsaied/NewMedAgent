@@ -1,50 +1,66 @@
 import React, { useState, useEffect } from 'react';
-import { X, UserPlus, Pencil } from 'lucide-react';
+import { X, UserPlus, Pencil, Phone, User, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UniversalImagePicker } from '../ui/UniversalImagePicker';
 import { useEmergency } from '../../context/EmergencyContext';
-
-const IOS_RELATIONSHIPS = [
-  'Mother', 'Father', 'Parent', 'Brother', 'Sister', 'Child', 
-  'Friend', 'Spouse', 'Partner', 'Assistant', 'Manager', 'Primary Physician', 'Specialist'
-];
+import { Select } from '../ui/Select';
 
 export function AddContactModal({ isOpen, onClose, contactToEdit = null }) {
   const { t } = useTranslation();
   const { addContact, updateContact } = useEmergency();
+  const [isSelectOpen, setIsSelectOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    relation: 'Friend',
+    relation: t('emergency.relationships.Friend'),
     image: null
   });
-  
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [error, setError] = useState('');
 
-  // Sync form with contactToEdit whenever modal opens or contact changes
+  const relationships = [
+    t('emergency.relationships.Mother'),
+    t('emergency.relationships.Father'),
+    t('emergency.relationships.Parent'),
+    t('emergency.relationships.Brother'),
+    t('emergency.relationships.Sister'),
+    t('emergency.relationships.Child'), 
+    t('emergency.relationships.Friend'),
+    t('emergency.relationships.Spouse'),
+    t('emergency.relationships.Partner'),
+    t('emergency.relationships.Assistant'),
+    t('emergency.relationships.Manager'),
+    t('emergency.relationships.Primary Physician'),
+    t('emergency.relationships.Specialist')
+  ];
+  
   useEffect(() => {
     if (contactToEdit) {
       setFormData({
         name: contactToEdit.name || '',
         phone: contactToEdit.phone || '',
-        relation: contactToEdit.relation || 'Friend',
+        relation: contactToEdit.relation || t('emergency.relationships.Friend'),
         image: contactToEdit.avatar || null
       });
     } else {
-      setFormData({ name: '', phone: '', relation: 'Friend', image: null });
+      setFormData({ name: '', phone: '', relation: t('emergency.relationships.Friend'), image: null });
     }
-  }, [contactToEdit, isOpen]);
-
-  if (!isOpen) return null;
+    setError('');
+  }, [contactToEdit, isOpen, t]);
 
   const handleImageSelect = (base64) => {
     setFormData({ ...formData, image: base64 });
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    if (!formData.image) {
+      setError(t('auth.profileImageRequired', { defaultValue: 'Image is required' }));
+      return;
+    }
     if (!formData.name || !formData.phone) return;
+    setError('');
 
     const contactData = {
       name: formData.name,
@@ -52,7 +68,7 @@ export function AddContactModal({ isOpen, onClose, contactToEdit = null }) {
       relation: formData.relation,
       translatedRelationKey: formData.relation,
       avatar: formData.image,
-      type: ['Primary Physician', 'Specialist'].includes(formData.relation) ? 'medical' : 'family'
+      type: [t('emergency.relationships.Primary Physician'), t('emergency.relationships.Specialist')].includes(formData.relation) ? 'medical' : 'family'
     };
 
     if (contactToEdit) {
@@ -64,127 +80,140 @@ export function AddContactModal({ isOpen, onClose, contactToEdit = null }) {
       });
     }
 
-    setFormData({ name: '', phone: '', relation: 'Friend', image: null });
     onClose();
   };
 
+  const modalShiftY = isSelectOpen ? -120 : 0;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-md transition-opacity"
-        onClick={onClose}
-      />
-      
-      {/* Modal */}
-      <div className="relative bg-white/90 backdrop-blur-3xl border border-white/40 shadow-2xl w-full max-w-md rounded-[2.5rem] overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200/50">
-          <h2 className="text-xl font-bold text-[#191c1e] tracking-tight">
-            {contactToEdit ? 'Edit Contact' : 'Add Emergency Contact'}
-          </h2>
-          <button onClick={onClose} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors">
-            <X className="w-5 h-5 text-slate-500" />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Avatar Upload */}
-          <div className="flex flex-col items-center justify-center gap-3">
-            <UniversalImagePicker 
-              onImageSelect={handleImageSelect}
-              currentImage={formData.image}
-              shape="circle"
-              label={contactToEdit ? "Update Photo" : "Add Photo"}
-              showAvatars={true}
-            />
-            <div className="flex flex-col items-center text-center">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-tighter">Emergency Contact Avatar</span>
-              <p className="text-[10px] text-slate-400">{contactToEdit ? "Change existing photo" : "Capture or upload photo"}</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
-              <input 
-                type="text" 
-                required
-                minLength={2}
-                value={formData.name}
-                onChange={e => setFormData({...formData, name: e.target.value})}
-                placeholder="e.g. Eleanor Fitzwilliam"
-                className="w-full bg-white/50 backdrop-blur-md border border-white/60 shadow-[0_8px_16px_rgba(0,0,0,0.03)] p-4 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-bold text-[#191c1e]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</label>
-              <input 
-                type="tel" 
-                required
-                pattern="[0-9]+"
-                value={formData.phone}
-                onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})}
-                placeholder="e.g. 01000000000"
-                className="w-full bg-white/50 backdrop-blur-md border border-white/60 shadow-[0_8px_16px_rgba(0,0,0,0.03)] p-4 rounded-[1.5rem] outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all font-bold text-[#191c1e]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Relationship</label>
-              <div 
-                onClick={() => setIsDropdownOpen(true)}
-                className="w-full bg-white/50 backdrop-blur-md border border-white/60 shadow-[0_8px_16px_rgba(0,0,0,0.03)] p-4 rounded-[1.5rem] outline-none hover:shadow-[0_12px_24px_rgba(0,0,0,0.05)] transition-all font-bold text-[#191c1e] cursor-pointer flex justify-between items-center"
-              >
-                <span>{formData.relation}</span>
-                <svg className={`w-5 h-5 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold tracking-tight p-4 rounded-2xl hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-600/20 transition-all active:scale-[0.98]"
-          >
-            {contactToEdit ? <Pencil className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
-            {contactToEdit ? 'Update Contact' : 'Save Emergency Contact'}
-          </button>
-        </form>
-      </div>
-
-      {/* Relation Selection Modal */}
-      {isDropdownOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-md transition-opacity"
-            onClick={() => setIsDropdownOpen(false)}
+    <AnimatePresence>
+      {isOpen && (
+        <React.Fragment>
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-[#0f172a]/40 backdrop-blur-md z-[99998]"
           />
-          <div className="relative bg-white/90 backdrop-blur-3xl border border-white/40 shadow-2xl w-full max-w-sm rounded-[2.5rem] overflow-hidden animate-in slide-in-from-bottom-10 sm:zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200/50">
-              <h3 className="text-lg font-extrabold text-[#191c1e] tracking-tight">Select Relationship</h3>
-              <button 
-                type="button"
-                onClick={() => setIsDropdownOpen(false)} 
-                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5 text-slate-500" />
-              </button>
-            </div>
-            <div className="max-h-[50vh] overflow-y-auto p-4 space-y-2">
-              {IOS_RELATIONSHIPS.map(rel => (
-                <div 
-                  key={rel} 
-                  onClick={() => { setFormData({...formData, relation: rel}); setIsDropdownOpen(false); }}
-                  className={`px-4 py-4 rounded-2xl cursor-pointer font-bold text-sm transition-all flex items-center justify-between ${formData.relation === rel ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-[#191c1e] hover:bg-blue-50/80 active:bg-blue-100'}`}
-                >
-                  {rel}
-                  {formData.relation === rel && (
-                    <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  )}
+          
+          {/* Modal Container */}
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={onClose}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1, 
+                y: modalShiftY 
+              }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white/95 backdrop-blur-3xl border border-slate-200/60 shadow-2xl w-full max-w-md rounded-[2.5rem] overflow-hidden flex flex-col"
+            >
+              <div className="flex items-center justify-between p-7 border-b border-slate-200/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                    {contactToEdit ? <Pencil className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
+                  </div>
+                  <h2 className="text-xl font-black text-[#191c1e] tracking-tight">
+                    {contactToEdit ? t('emergency.editContact') : t('emergency.addContact')}
+                  </h2>
                 </div>
-              ))}
-            </div>
+                <button 
+                  onClick={onClose} 
+                  className="p-3 bg-slate-100 hover:bg-slate-200 ms-auto rounded-2xl transition-all active:scale-95 text-slate-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-8 space-y-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
+                {/* Avatar Upload */}
+                <div className="flex flex-col items-center justify-center gap-4 pt-2">
+                  <UniversalImagePicker 
+                    onImageSelect={handleImageSelect}
+                    currentImage={formData.image}
+                    shape="circle"
+                    label={contactToEdit ? t('emergency.updatePhoto') : t('emergency.addPhoto')}
+                    showAvatars={true}
+                  />
+                  <div className="flex flex-col items-center text-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('emergency.avatarDesc')}</span>
+                    <p className="text-[10px] font-bold text-slate-400/60 mt-1">{contactToEdit ? t('emergency.changePhoto') : t('emergency.uploadPhoto')}</p>
+                    {error && <span className="text-[10px] text-red-500 font-bold mt-1 bg-red-50 px-2 py-0.5 rounded-full">{error}</span>}
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                      {t('emergency.fullName')}
+                    </label>
+                    <div className="relative group">
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                      <input 
+                        type="text" 
+                        required
+                        minLength={2}
+                        value={formData.name}
+                        onChange={e => setFormData({...formData, name: e.target.value})}
+                        placeholder={t('emergency.namePlaceholder', 'e.g. Eleanor Fitzwilliam')}
+                        className="w-full bg-slate-50/50 border border-slate-200/60 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all font-bold text-[#191c1e] placeholder:text-slate-200"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                      {t('emergency.phone')}
+                    </label>
+                    <div className="relative group">
+                      <Phone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
+                      <input 
+                        type="tel" 
+                        required
+                        pattern="[0-9]+"
+                        value={formData.phone}
+                        onChange={e => setFormData({...formData, phone: e.target.value.replace(/\D/g, '')})}
+                        placeholder={t('emergency.phonePlaceholder', 'e.g. 01000000000')}
+                        className="w-full bg-slate-50/50 border border-slate-200/60 p-4 pl-12 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all font-bold text-[#191c1e] placeholder:text-slate-200"
+                      />
+                    </div>
+                  </div>
+
+                  <Select 
+                    label={t('emergency.relationship')}
+                    value={formData.relation}
+                    options={relationships}
+                    onOpenChange={setIsSelectOpen}
+                    shiftY={modalShiftY}
+                    onChange={(e) => setFormData({...formData, relation: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="p-8 border-t border-slate-100 bg-slate-50/30 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-4 text-xs font-black text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {t('emergency.cancel', 'Cancel')}
+                </button>
+                <button 
+                  onClick={handleSubmit}
+                  className="flex-1 bg-blue-600 text-white font-black text-xs tracking-widest uppercase p-4 rounded-2xl hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                >
+                  {contactToEdit ? <Pencil className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
+                  {contactToEdit ? t('emergency.editContact') : t('emergency.addContact')}
+                </button>
+              </div>
+            </motion.div>
           </div>
-        </div>
+        </React.Fragment>
       )}
-    </div>
+    </AnimatePresence>
   );
 }

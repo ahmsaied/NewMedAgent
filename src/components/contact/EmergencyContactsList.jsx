@@ -5,7 +5,7 @@ import { useEmergency } from '../../context/EmergencyContext';
 import { AddContactModal } from './AddContactModal';
 import maleAvatar from '../../assets/male-avatar.svg';
 
-export function EmergencyContactsList({ variant = 'compact', allowDelete = false }) {
+export function EmergencyContactsList({ variant = 'compact', allowDelete = false, allowEdit = true }) {
   const { t } = useTranslation();
   const { contacts, removeContact } = useEmergency();
   const [contactToDelete, setContactToDelete] = useState(null);
@@ -28,7 +28,7 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
   if (!contacts || contacts.length === 0) {
     return (
       <div className="bg-slate-50 border border-slate-200 border-dashed rounded-3xl p-6 flex items-center justify-center text-center">
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No emergency contacts added yet.</p>
+        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('emergency.noContacts', 'No emergency contacts added yet.')}</p>
       </div>
     );
   }
@@ -59,13 +59,15 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => handleEdit(contact)}
-                    className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
-                    title="Edit"
-                  >
-                    <Pencil className="w-5 h-5" />
-                  </button>
+                  {allowEdit && (
+                    <button
+                      onClick={() => handleEdit(contact)}
+                      className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+                      title="Edit"
+                    >
+                      <Pencil className="w-5 h-5" />
+                    </button>
+                  )}
                   {allowDelete && (
                     <button
                       onClick={() => setContactToDelete(contact)}
@@ -101,14 +103,16 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleEdit(contact)}
-                    className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  {allowEdit && (
+                    <button 
+                      onClick={() => handleEdit(contact)}
+                      className="p-2 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   <a href={`tel:${contact.phone.replace(/[^0-9+]/g, '')}`}>
-                    <Phone className="w-4 h-4 text-blue-400 group-hover:text-white transition-colors cursor-pointer ml-1 shrink-0" />
+                    <Phone className="w-4 h-4 text-blue-400 group-hover:text-white transition-colors cursor-pointer ms-1 shrink-0" />
                   </a>
                 </div>
               </div>
@@ -138,13 +142,13 @@ export function EmergencyContactsList({ variant = 'compact', allowDelete = false
                   onClick={() => setContactToDelete(null)}
                   className="flex-1 py-4 bg-white/60 border border-slate-200 backdrop-blur-sm text-slate-700 font-bold rounded-2xl hover:bg-white hover:shadow-sm transition-all"
                 >
-                  Cancel
+                  {t('emergency.cancel', 'Cancel')}
                 </button>
                 <button 
                   onClick={confirmDelete}
                   className="flex-1 py-4 bg-red-500 text-white font-bold rounded-2xl hover:bg-red-600 shadow-lg shadow-red-500/20 active:scale-[0.98] transition-all text-sm"
                 >
-                  Delete
+                  {t('emergency.delete', 'Delete')}
                 </button>
               </div>
             </div>

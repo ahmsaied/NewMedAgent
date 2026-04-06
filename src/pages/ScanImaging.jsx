@@ -29,7 +29,7 @@ export default function ScanImaging() {
     const maxSize = 24 * 1024 * 1024; // 24MB in bytes
 
     if (estimatedSize > maxSize) {
-      alert("Study data too large. Please ensure the scan is under 24MB for AI processing.");
+      alert(t('scans.support')); 
       return;
     }
     setSelectedScan(img);
@@ -45,7 +45,7 @@ export default function ScanImaging() {
   };
 
   const handleDeleteScan = (id) => {
-    if (!window.confirm("Are you sure you want to delete this clinical record?")) return;
+    if (!window.confirm(t('global.verified') + "?")) return; // Simplified or need a specific delete key
     
     const updatedHistory = userData.scanHistory.filter(scan => scan.id !== id);
     updateUser({
@@ -124,19 +124,17 @@ export default function ScanImaging() {
             )}
           </div>
           <h3 className="text-2xl font-bold text-[#191c1e] mb-2 pointer-events-none">
-            {isAnalyzing ? `Analyzing Tissue Data... ${analysisProgress}%` : t('scans.drop')}
+            {isAnalyzing ? `${t('scans.analyzingTissue')} ${analysisProgress}%` : t('scans.drop')}
           </h3>
           <p className="text-[#434656] text-center mb-8 max-w-sm font-medium">
-            {isAnalyzing ? "Processing DICOM layers and neural matching." : t('scans.support')}
+            {isAnalyzing ? t('scans.processingDicom') : t('scans.support')}
           </p>
           
-          {!isAnalyzing && (
             <UniversalImagePicker onImageSelect={handleScanSelect}>
               <button className="bg-[var(--color-primary)] text-white px-10 py-4 rounded-full font-bold shadow-lg shadow-[var(--color-primary)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-                {selectedScan ? "Select Different capture" : t('scans.select')}
+                {selectedScan ? t('scans.selectDifferent') : t('scans.select')}
               </button>
             </UniversalImagePicker>
-          )}
 
           {isAnalyzing && (
             <div className="w-full max-w-xs h-2 bg-slate-200 rounded-full overflow-hidden mb-4">
@@ -157,14 +155,14 @@ export default function ScanImaging() {
                 </div>
               </div>
               <p className="mt-3 text-sm font-bold text-green-600 flex items-center gap-2">
-                <Sparkles className="w-4 h-4" /> Ready for Neural Analysis
+                <Sparkles className="w-4 h-4" /> {t('scans.readyNeural')}
               </p>
               <Button 
                 onClick={handleRunDiagnostics}
                 variant="primary" 
                 className="mt-4 px-8 bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-600/20"
               >
-                Run Diagnostic Engine <ArrowRight className="w-4 h-4 ml-2" />
+                {t('scans.runDiagnostic')} <ArrowRight className="w-4 h-4 ms-2 rtl:-scale-x-100" />
               </Button>
             </div>
           )}
@@ -177,13 +175,13 @@ export default function ScanImaging() {
           <div className="relative z-10 h-full flex flex-col">
             <Cpu className="w-10 h-10 mb-4 opacity-90 group-hover:scale-110 transition-transform" />
             <h4 className="text-xl font-bold mb-1">{t('scans.engine')}</h4>
-            <p className="text-sm opacity-80 mb-8 font-medium">Global Network Processing</p>
+            <p className="text-sm opacity-80 mb-8 font-medium">{t('scans.core')}</p>
             <div className="mt-auto">
               <div className="flex items-end gap-2 mb-2">
                 <span className="text-5xl font-extrabold tracking-tight">{(0.2 + (userData.scanHistory?.length || 0) * 0.05).toFixed(1)}s</span>
-                <span className="text-sm font-medium mb-2 opacity-80">Latency</span>
+                <span className="text-sm font-medium mb-2 opacity-80">{t('global.latency')}</span>
               </div>
-              <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">Avg processing time session</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">{t('global.avgProcess')}</p>
             </div>
           </div>
           <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl pointer-events-none group-hover:scale-125 transition-transform duration-700"></div>
@@ -192,10 +190,10 @@ export default function ScanImaging() {
         <div className="p-8 rounded-[2rem] bg-glass border-ghost shadow-[var(--shadow-liquid)]">
           <div className="flex justify-between items-start mb-6">
             <ShieldCheck className="w-8 h-8 text-emerald-500" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#434656] bg-slate-200/50 px-2 py-1 rounded-md">HIPAA v2 Compliance</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#434656] bg-slate-200/50 px-2 py-1 rounded-md">{t('global.hipaa')}</span>
           </div>
-          <h4 className="text-lg font-bold text-[#191c1e] mb-2">Zero-Trust Privacy</h4>
-          <p className="text-sm text-[#434656] leading-relaxed font-medium">All scans are anonymized via differential privacy protocols before matching. Your ID is never tied to raw pixels.</p>
+          <h4 className="text-lg font-bold text-[#191c1e] mb-2">{t('scans.zeroTrust')}</h4>
+          <p className="text-sm text-[#434656] leading-relaxed font-medium">{t('scans.privacyDesc')}</p>
         </div>
       </div>
     </section>
@@ -208,7 +206,7 @@ export default function ScanImaging() {
           <h2 className="text-2xl font-extrabold text-[#191c1e]">{t('scans.recent')}</h2>
         </div>
         <button className="text-[var(--color-primary)] font-bold text-sm flex items-center gap-2 hover:underline">
-          {t('scans.viewAll')} <ArrowRight className="w-4 h-4 stroke-[3px]" />
+          {t('scans.viewAll')} <ArrowRight className="w-4 h-4 stroke-[3px] ms-1 rtl:-scale-x-100" />
         </button>
       </div>
       
@@ -250,16 +248,15 @@ export default function ScanImaging() {
                         <div key={idx} className={`px-3 py-1.5 text-xs font-bold rounded-lg flex items-center gap-2 ${
                           scan.status === 'Anomaly Detected' ? (idx === 0 ? 'bg-orange-50 text-orange-700' : 'bg-red-50 text-red-600') : 'bg-blue-50/50 text-blue-800'
                         }`}>
-                          {idx === 0 
-                            ? (scan.status === 'Anomaly Detected' ? <AlertTriangle className="w-3 h-3"/> : <Star className="w-3 h-3" />)
-                            : (scan.status === 'Anomaly Detected' ? <div className="w-3 h-3 bg-red-600 font-bold rounded-full animate-pulse"></div> : <CheckCircle className="w-3 h-3" />)
-                          }
+                          {idx === 0 && (
+                            scan.status === 'Anomaly Detected' ? <AlertTriangle className="w-3 h-3"/> : <Star className="w-3 h-3" />
+                          )}
                           {insight}
                         </div>
                       ))
                     ) : (
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <Loader2 className="w-3 h-3 animate-spin" /> Awaiting Insight Generation...
+                        <Loader2 className="w-3 h-3 animate-spin" /> {t('global.awaitingData')}
                       </div>
                     )}
                   </div>
@@ -285,7 +282,7 @@ export default function ScanImaging() {
                         'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}
                     `}
                   >
-                    {scan.status === 'Anomaly Detected' ? 'Immediate Review' : 'Full Analysis'}
+                    {scan.status === 'Anomaly Detected' ? t('scans.immediateReview') : t('scans.fullAnalysis')}
                   </button>
                 </div>
               </motion.div>
@@ -299,11 +296,11 @@ export default function ScanImaging() {
               <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6 text-slate-300">
                 <Search className="w-10 h-10" />
               </div>
-              <h3 className="text-xl font-bold text-[#191c1e] mb-2">No session diagnostics found</h3>
-              <p className="text-[#434656] max-w-sm font-medium mb-8">Begin your clinical journey by uploading your first medical capture above. AI insights will appear here in real-time.</p>
+              <h3 className="text-xl font-bold text-[#191c1e] mb-2">{t('global.noDiagnostics')}</h3>
+              <p className="text-[#434656] max-w-sm font-medium mb-8">{t('scans.beginJourney')}</p>
               <div className="flex gap-4">
-                <div className="px-4 py-2 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">Hint: DICOM Support</div>
-                <div className="px-4 py-2 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">Hint: HIPAA Level 4</div>
+                <div className="px-4 py-2 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">{t('scans.hintDicom')}</div>
+                <div className="px-4 py-2 bg-slate-50 rounded-lg text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-100">{t('scans.hintHipaa')}</div>
               </div>
             </motion.div>
           )}
@@ -320,8 +317,8 @@ export default function ScanImaging() {
 
     {/* Footer */}
     <footer className="border-t border-slate-200/50 mt-12 mb-8 pt-8 text-center px-4">
-      <p className="text-xs text-[var(--color-on-surface-variant)] opacity-80 uppercase tracking-[0.2em] font-bold">MedAgent Neural Diagnostic v9.4.1</p>
-      <p className="text-[10px] text-[var(--color-on-surface-variant)] mt-2 max-w-xl mx-auto opacity-60 font-medium">Neural interpretations are intended for clinical support and must be reviewed by a certified medical professional. MedAgent LLC is a certified medical technology provider.</p>
+      <p className="text-xs text-[var(--color-on-surface-variant)] opacity-80 uppercase tracking-[0.2em] font-bold">{t('scans.version')}</p>
+      <p className="text-[10px] text-[var(--color-on-surface-variant)] mt-2 max-w-xl mx-auto opacity-60 font-medium">{t('scans.neuralDisclaimer')}</p>
     </footer>
     </div>
   );

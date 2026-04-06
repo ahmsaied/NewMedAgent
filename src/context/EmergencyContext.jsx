@@ -1,34 +1,57 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getEmergencyNumber } from '../utils/emergencyNumbers';
+import { useAuth } from './AuthContext';
 
 import { MockService } from '../services/api/mockService';
 
 const EmergencyContext = createContext({});
 
 export function EmergencyProvider({ children }) {
+  const { userData } = useAuth();
+  const userEmail = userData?.email || 'guest';
+  const storageKey = `medagent_emergency_contacts_${userEmail}`;
+
   const [isLocating, setIsLocating] = useState(true);
   const [error, setError] = useState(null);
   const [emergencyNumber, setEmergencyNumber] = useState(null);
   const [coordinates, setCoordinates] = useState(null);
-  const [contacts, setContacts] = useState(() => {
-    const saved = localStorage.getItem('medagent_emergency_contacts');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [contacts, setContacts] = useState([]);
+  const loadedFor = useRef(null);
 
-  // Trigger on INITIAL APP LOAD (Global)
+  // Load contacts when user changes
+  useEffect(() => {
+    // 1. Mark as loading (reset loadedFor)
+    loadedFor.current = null;
+    
+    // 2. Fetch the correct data
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      setContacts(JSON.parse(saved));
+    } else {
+      // Start with empty list for new users to prevent "cached demo data" confusion
+      setContacts([]);
+    }
+    
+    // 3. Update the owner ref ONLY AFTER the fetch has been initiated
+    // (Actual state update will happen in the next render)
+    loadedFor.current = userEmail;
+  }, [storageKey, userEmail]);
+
   useEffect(() => {
     determineLocation();
-    
-    // Only fetch from MockService if we have NO existing data in storage
-    const saved = localStorage.getItem('medagent_emergency_contacts');
-    if (!saved || JSON.parse(saved).length === 0) {
-      MockService.getEmergencyContacts().then(setContacts);
-    }
   }, []);
 
   // Persist contacts whenever they change
   useEffect(() => {
-    localStorage.setItem('medagent_emergency_contacts', JSON.stringify(contacts));
+    // CRITICAL: ONLY save if:
+    // 1. We have a valid user (not guest)
+    // 2. The CURRENT contacts state definitely belongs to the CURRENT user
+    if (userEmail && userEmail !== 'guest' && loadedFor.current === userEmail) {
+      localStorage.setItem(storageKey, JSON.stringify(contacts));
+    }
+    // We EXCLUDE storageKey and userEmail from dependencies here 
+    // so this effect ONLY fires when the contacts state is updated.
+    // This prevents "stale" contacts from being saved into "new" storage keys during transitions.
   }, [contacts]);
 
   const addContact = (newContact) => {

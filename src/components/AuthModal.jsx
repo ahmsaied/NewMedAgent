@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from './ui/GlassCard';
 import { Button } from './ui/Button';
@@ -10,6 +11,8 @@ import { Select } from './ui/Select';
 import { DatePicker } from './ui/DatePicker';
 
 export function AuthModal({ isOpen, onClose }) {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
   const { updateUser, login } = useAuth();
   const [view, setView] = useState('login'); // 'login' or 'register'
   const [step, setStep] = useState(1);
@@ -21,10 +24,20 @@ export function AuthModal({ isOpen, onClose }) {
     lastName: '',
     email: '',
     password: '',
-    bloodType: 'O Positive',
+    bloodType: 'Unknown',
     gender: 'M',
-    dob: ''
+    dob: '',
+    _hp_website: '' // Honeypot field
   });
+
+  const [errors, setErrors] = useState({});
+  
+  // Reset modal state when it's opened
+  React.useEffect(() => {
+    if (isOpen) {
+      switchView('login');
+    }
+  }, [isOpen]);
 
   const switchView = (v) => {
     setView(v);
@@ -35,14 +48,61 @@ export function AuthModal({ isOpen, onClose }) {
       lastName: '',
       email: '',
       password: '',
-      bloodType: 'O Positive',
+      bloodType: 'O+',
       gender: 'M',
-      dob: ''
+      dob: '',
+      _hp_website: ''
     });
   };
 
-  const nextStep = () => setStep(prev => prev + 1);
-  const prevStep = () => setStep(prev => prev - 1);
+  const validateStep1 = () => {
+    const newErrors = {};
+    if (!formData.firstName.trim()) newErrors.firstName = t('auth.firstNameRequired');
+    if (!formData.lastName.trim()) newErrors.lastName = t('auth.lastNameRequired');
+    if (!profileImage) newErrors.profileImage = t('auth.profileImageRequired', { defaultValue: 'Profile image is required' });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateStep2 = () => {
+    const newErrors = {};
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = t('auth.emailRequired');
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = t('auth.invalidEmail');
+    }
+
+    // Password complexity: 8+ chars, 1 uppercase, 1 number, 1 symbol
+    const password = formData.password;
+    if (!password) {
+      newErrors.password = t('auth.passwordRequired');
+    } else {
+      if (password.length < 8) newErrors.password = t('auth.passwordMin');
+      else if (!/[A-Z]/.test(password)) newErrors.password = t('auth.passwordUpper');
+      else if (!/[0-9]/.test(password)) newErrors.password = t('auth.passwordNumber');
+      else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) newErrors.password = t('auth.passwordSpecial');
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const nextStep = () => {
+    // Honeypot check - silently prevent progression without alerting bot
+    if (formData._hp_website) return;
+    
+    if (step === 1 && !validateStep1()) return;
+    if (step === 2 && !validateStep2()) return;
+    setStep(prev => prev + 1);
+    setErrors({});
+  };
+  const prevStep = () => {
+    setStep(prev => prev - 1);
+    setErrors({});
+  };
 
   const handleComplete = () => {
     updateUser({
@@ -68,21 +128,22 @@ export function AuthModal({ isOpen, onClose }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[150]"
           />
           {/* Modal Content */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 30 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg z-[150] pointer-events-none p-4"
-          >
-            <div className="pointer-events-auto">
-              <GlassCard className="p-8 md:p-10 flex flex-col min-h-[500px] bg-glass-heavy border-ghost shadow-[0_40px_80px_rgba(0,91,192,0.2)] pb-12">
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4" onClick={onClose}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-lg"
+            >
+              <GlassCard className="p-8 md:p-10 flex flex-col min-h-[500px] bg-glass-heavy border-ghost shadow-[0_40px_80px_rgba(0,91,192,0.2)] pb-12 max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <button 
                   onClick={onClose}
-                  className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/40 transition-colors text-[var(--color-on-surface-variant)]"
+                  className={`absolute top-6 ${isRtl ? 'left-6' : 'right-6'} p-2 rounded-full hover:bg-white/40 transition-colors text-[var(--color-on-surface-variant)] z-50`}
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -107,26 +168,53 @@ export function AuthModal({ isOpen, onClose }) {
                         className="flex flex-col gap-6"
                       >
                         <div>
-                          <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">Welcome Back</h2>
-                          <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">Authenticate to access the clinical sanctuary.</p>
+                          <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">{t('auth.welcomeBack')}</h2>
+                          <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">{t('auth.authDescription')}</p>
                         </div>
-                        <Input id="email" type="email" label="Email Address" placeholder="dr.smith@medagent.ai" />
-                        <Input id="password" type="password" label="Password" placeholder="••••••••" />
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          label={t('auth.emailLabel')} 
+                          placeholder={t('auth.emailPlaceholder')} 
+                          value={formData.email}
+                          onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                          error={errors.loginEmail}
+                        />
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          label={t('auth.passwordLabel')} 
+                          placeholder={t('auth.passwordPlaceholder')} 
+                          value={formData.password}
+                          onChange={(e) => setFormData(prev => ({...prev, password: e.target.value}))}
+                          error={errors.loginPassword}
+                        />
                         <Button 
                           variant="primary" 
                           className="w-full mt-2" 
                           onClick={() => {
+                            const newErrors = {};
+                            if (formData._hp_website) return; // Honeypot trap
+                            
+                            if (!formData.email) newErrors.loginEmail = t('auth.emailRequired');
+                            if (!formData.password) newErrors.loginPassword = t('auth.passwordRequired');
+                            
+                            if (Object.keys(newErrors).length > 0) {
+                              setErrors(newErrors);
+                              return;
+                            }
+
                             updateUser({ isRegistered: true });
                             login('mock-session-token');
                             onClose();
                           }}
                         >
-                          Authenticate
+                          {t('auth.authenticate')}
                         </Button>
                         <p className="text-center text-sm text-[var(--color-on-surface-variant)] mt-4">
-                          Don't have an account?{' '}
+                          {t('auth.noAccount')}{' '}
                           <button onClick={() => switchView('register')} className="text-[var(--color-primary)] font-semibold hover:underline">
-                            Register securely
+                            {t('auth.registerSecurely')}
                           </button>
                         </p>
                       </motion.div>
@@ -144,8 +232,8 @@ export function AuthModal({ isOpen, onClose }) {
                       >
                         <div className="flex justify-between items-end">
                           <div>
-                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">Create Account</h2>
-                            <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">Personal Details</p>
+                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">{t('auth.createAccount')}</h2>
+                            <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">{t('auth.personalDetails')}</p>
                           </div>
                           <span className="text-sm font-medium text-[var(--color-on-surface-variant)]">1 / 3</span>
                         </div>
@@ -156,33 +244,38 @@ export function AuthModal({ isOpen, onClose }) {
                             onImageSelect={setProfileImage}
                             currentImage={profileImage}
                             shape="circle"
-                            label="Photo"
+                            label={t('auth.profileAvatar')}
                             showAvatars={true}
                           />
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Profile Avatar</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('auth.profileAvatar')}</span>
+                          {errors.profileImage && <span className="text-xs text-red-500 font-bold mt-1 text-center">{errors.profileImage}</span>}
                         </div>
 
                         <Input 
                           id="firstName" 
-                          label="First Name" 
-                          placeholder="Sarah" 
+                          label={t('auth.firstNameLabel')} 
+                          placeholder={t('auth.firstNamePlaceholder')} 
                           value={formData.firstName}
-                          onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({...prev, firstName: e.target.value}))}
+                          required
+                          error={errors.firstName}
                         />
                         <Input 
                           id="lastName" 
-                          label="Last Name" 
-                          placeholder="Connor" 
+                          label={t('auth.lastNameLabel')} 
+                          placeholder={t('auth.lastNamePlaceholder')} 
                           value={formData.lastName}
-                          onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({...prev, lastName: e.target.value}))}
+                          required
+                          error={errors.lastName}
                         />
                         <Button variant="primary" onClick={nextStep} className="w-full mt-2">
-                          Continue <ArrowRight className="w-4 h-4 ml-2" />
+                          {t('auth.continue')} <ArrowRight className="w-4 h-4 ms-2 rtl:-scale-x-100" />
                         </Button>
                         <p className="text-center text-sm text-[var(--color-on-surface-variant)] mt-4">
-                          Already registered?{' '}
+                          {t('auth.alreadyRegistered')}{' '}
                           <button onClick={() => switchView('login')} className="text-[var(--color-primary)] font-semibold hover:underline">
-                            Return to Login
+                            {t('auth.returnToLogin')}
                           </button>
                         </p>
                       </motion.div>
@@ -200,31 +293,47 @@ export function AuthModal({ isOpen, onClose }) {
                       >
                          <div className="flex justify-between items-end">
                           <div>
-                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">Account Access</h2>
-                            <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">Secure Credentials</p>
+                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">{t('auth.accountAccess')}</h2>
+                            <p className="text-sm text-[var(--color-on-surface-variant)] mt-1">{t('auth.secureCredentials')}</p>
                           </div>
                           <span className="text-sm font-medium text-[var(--color-on-surface-variant)]">2 / 3</span>
                         </div>
                         <Input 
                           id="email" 
                           type="email" 
-                          label="Professional Email" 
-                          placeholder="sarah@clinic.com" 
+                          label={t('auth.professionalEmail')} 
+                          placeholder={t('auth.emailPlaceholder')} 
                           value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({...prev, email: e.target.value}))}
+                          required
+                          error={errors.email}
                         />
                         <Input 
                           id="password" 
                           type="password" 
-                          label="Password" 
-                          placeholder="••••••••" 
+                          label={t('auth.passwordLabel')} 
+                          placeholder={t('auth.passwordPlaceholder')} 
                           value={formData.password}
-                          onChange={(e) => setFormData({...formData, password: e.target.value})}
+                          onChange={(e) => setFormData(prev => ({...prev, password: e.target.value}))}
+                          required
+                          error={errors.password}
                         />
+                        <div className="absolute left-[-9999px] top-[-9999px]" aria-hidden="true">
+                          <label htmlFor="_hp_website">Website</label>
+                          <input 
+                            type="text" 
+                            id="_hp_website" 
+                            name="_hp_website" 
+                            tabIndex="-1" 
+                            autoComplete="off"
+                            value={formData._hp_website}
+                            onChange={(e) => setFormData(prev => ({...prev, _hp_website: e.target.value}))}
+                          />
+                        </div>
                         <div className="flex gap-4 mt-2">
-                          <Button variant="secondary" onClick={prevStep} className="flex-1 py-3"><ArrowLeft className="w-4 h-4 mr-2" /> Back</Button>
+                          <Button variant="secondary" onClick={prevStep} className="flex-1 py-3"><ArrowLeft className="w-4 h-4 me-2 rtl:-scale-x-100" /> {t('auth.back')}</Button>
                           <Button variant="primary" onClick={nextStep} className="flex-1 py-3 group">
-                            Next Step <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                            {t('auth.nextStep')} <ArrowRight className="w-4 h-4 ms-2 rtl:-scale-x-100 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" />
                           </Button>
                         </div>
                       </motion.div>
@@ -242,60 +351,53 @@ export function AuthModal({ isOpen, onClose }) {
                       >
                          <div className="flex justify-between items-end">
                           <div>
-                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">Health Profile</h2>
-                            <p className="text-sm text-blue-600 font-bold mt-1 uppercase tracking-tighter">Optional Information</p>
+                            <h2 className="text-2xl font-manrope font-bold text-[var(--color-on-surface)]">{t('auth.healthProfile')}</h2>
                           </div>
                           <span className="text-sm font-medium text-[var(--color-on-surface-variant)]">3 / 3</span>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
                           <Select 
-                            label="Blood Type"
+                            label={t('medicalId.bloodType')}
                             value={formData.bloodType}
-                            onChange={(e) => setFormData({...formData, bloodType: e.target.value})}
-                            options={["O Positive", "O Negative", "A Positive", "A Negative", "B Positive", "B Negative"]}
+                            onChange={(e) => setFormData(prev => ({ ...prev, bloodType: e.target.value }))}
+                            options={[t('global.unknown'), "O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]}
                           />
                           <Select 
-                            label="Biological Gender"
+                            label={t('auth.biologicalGender')}
                             value={formData.gender}
                             onChange={(e) => setFormData({...formData, gender: e.target.value})}
                             options={[
-                              { label: 'Female', value: 'F' },
-                              { label: 'Male', value: 'M' }
+                              { label: t('global.female'), value: 'F' },
+                              { label: t('global.male'), value: 'M' }
                             ]}
                           />
                         </div>
 
                         <DatePicker 
-                          label="Date of Birth" 
+                          label={t('auth.dob')} 
                           value={formData.dob}
                           onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                          placeholder="YYYY-MM-DD"
+                          placeholder={t('auth.dateOfBirthPlaceholder')}
                         />
 
                         <div className="flex gap-4 mt-2">
-                          <Button variant="secondary" onClick={prevStep} className="flex-1 py-3">Back</Button>
+                          <Button variant="secondary" onClick={prevStep} className="flex-1 py-3">{t('auth.back')}</Button>
                           <Button 
                             variant="primary" 
                             onClick={handleComplete} 
                             className="flex-1 py-3 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
                           >
-                            <Check className="w-5 h-5" /> Complete
+                            <Check className="w-5 h-5" /> {t('auth.complete')}
                           </Button>
                         </div>
-                        <button 
-                          onClick={handleComplete}
-                          className="text-center text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest"
-                        >
-                          Skip for now
-                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
               </GlassCard>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </React.Fragment>
       )}
     </AnimatePresence>

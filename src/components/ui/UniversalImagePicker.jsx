@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Image as ImageIcon, Cloud, X, Check, RefreshCw, Loader2, User } from 'lucide-react';
 import { useImagePicker } from '../../hooks/useImagePicker';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import maleAvatar from '../../assets/male-avatar.svg';
 import femaleAvatar from '../../assets/female-avatar.svg';
 
@@ -19,6 +20,7 @@ export function UniversalImagePicker({
   showAvatars = false,
   children
 }) {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [stream, setStream] = useState(null);
@@ -146,7 +148,7 @@ export function UniversalImagePicker({
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 pb-2 shrink-0">
-                <h3 className="text-sm font-black text-white uppercase tracking-widest opacity-80 pl-2">Select Source</h3>
+                <h3 className="text-sm font-black text-white uppercase tracking-widest opacity-80 pl-2">{t('global.selectSource')}</h3>
                 <button type="button" onClick={() => setIsMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/40">
                   <X className="w-5 h-5" />
                 </button>
@@ -157,21 +159,21 @@ export function UniversalImagePicker({
                 <div className="grid grid-cols-3 gap-3 mb-6">
                   <button type="button" onClick={startCamera} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
                     <div className="bg-blue-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><Camera className="w-5 h-5 text-blue-400" /></div>
-                    <span className="text-[10px] font-bold text-white/60">Camera</span>
+                    <span className="text-[10px] font-bold text-white/60">{t('global.camera')}</span>
                   </button>
                   <button type="button" onClick={handleGallery} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
                     <div className="bg-purple-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><ImageIcon className="w-5 h-5 text-purple-400" /></div>
-                    <span className="text-[10px] font-bold text-white/60">Gallery</span>
+                    <span className="text-[10px] font-bold text-white/60">{t('global.gallery')}</span>
                   </button>
                   <button type="button" onClick={handleDrive} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group border border-white/5">
                     <div className="bg-amber-500/20 p-3 rounded-xl group-hover:scale-110 transition-transform"><Cloud className="w-5 h-5 text-amber-400" /></div>
-                    <span className="text-[10px] font-bold text-white/60">Drive</span>
+                    <span className="text-[10px] font-bold text-white/60">{t('global.drive')}</span>
                   </button>
                 </div>
 
                 {showAvatars && (
                   <div className="pt-6 border-t border-white/5">
-                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-4 text-center">Or Use Avatar</p>
+                    <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-4 text-center">{t('global.orUseAvatar')}</p>
                     <div className="flex justify-center gap-8">
                       <button 
                         type="button"
@@ -181,7 +183,7 @@ export function UniversalImagePicker({
                         <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300 overflow-hidden">
                           <img src={maleAvatar} alt="Male" className="w-12 h-12 object-contain" />
                         </div>
-                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Male</span>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">{t('global.male')}</span>
                       </button>
                       <button 
                         type="button"
@@ -191,7 +193,7 @@ export function UniversalImagePicker({
                         <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center group-hover:scale-110 group-hover:bg-white/10 transition-all duration-300 overflow-hidden">
                           <img src={femaleAvatar} alt="Female" className="w-12 h-12 object-contain" />
                         </div>
-                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">Female</span>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">{t('global.female')}</span>
                       </button>
                     </div>
                   </div>

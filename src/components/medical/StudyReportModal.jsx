@@ -2,8 +2,11 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Share2, ShieldCheck, CheckCircle2, AlertCircle, FileText, Activity, BrainCircuit } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useTranslation } from 'react-i18next';
 
 export function StudyReportModal({ isOpen, onClose, scan }) {
+  const { i18n } = useTranslation();
+  const isRtl = i18n.dir() === 'rtl';
   if (!scan) return null;
 
   return (
@@ -30,7 +33,7 @@ export function StudyReportModal({ isOpen, onClose, scan }) {
             <div className="w-full md:w-[45%] bg-slate-50 p-6 md:p-10 flex flex-col items-center justify-center border-r border-slate-100 overflow-y-auto">
               <div className="w-full aspect-square rounded-[2rem] overflow-hidden shadow-2xl border-8 border-white mb-8 group relative cursor-zoom-in">
                 <img src={scan.imgUrl} alt={scan.type} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                <div className="absolute top-4 left-4">
+                <div className={`absolute top-4 ${isRtl ? 'right-4' : 'left-4'}`}>
                   <span className="px-3 py-1 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-full shadow-lg">HD NEURAL CAPTURE</span>
                 </div>
               </div>
@@ -115,7 +118,7 @@ export function StudyReportModal({ isOpen, onClose, scan }) {
               {/* Actions Footer */}
               <div className="mt-auto pt-8 border-t border-slate-100 flex flex-wrap gap-4">
                 <Button variant="primary" className="flex-1 bg-blue-600 hover:bg-blue-700 gap-2 font-black py-4">
-                  <Download className="w-5 h-5" /> Download Report PDF
+                  <Download className="w-5 h-5" /> {t('medicalId.downloadReport', 'Download Report PDF')}
                 </Button>
                 <div className="flex gap-3 w-full sm:w-auto">
                   <button className="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all text-slate-600">
@@ -125,7 +128,7 @@ export function StudyReportModal({ isOpen, onClose, scan }) {
                     onClick={onClose}
                     className="p-4 px-8 rounded-2xl bg-white border border-slate-200 hover:bg-slate-50 transition-all text-slate-700 font-black uppercase tracking-widest text-xs"
                   >
-                    Close
+                    {t('medicalId.close', 'Close')}
                   </button>
                 </div>
               </div>

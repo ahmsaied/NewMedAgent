@@ -10,7 +10,7 @@ export function PageHeader({
   align = "left"
 }) {
   return (
-    <header className={`flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-6 ${align === 'center' ? 'text-center lg:text-left items-center lg:items-end' : ''} ${className}`}>
+    <header className={`flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-6 ${align === 'center' ? 'text-center lg:text-start items-center lg:items-end' : ''} ${className}`}>
       <div className={`max-w-2xl w-full ${align === 'center' ? 'flex flex-col items-center lg:items-start' : ''}`}>
         {badges && <div className="mb-4">{badges}</div>}
         <h1 className={`${titleClassName} font-extrabold tracking-tight text-on-surface mb-2`}>{title}</h1>

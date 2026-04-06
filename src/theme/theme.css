@@ -45,15 +45,68 @@
 
 @layer utilities {
   .bg-glass-liquid {
-    @apply bg-white/40 backdrop-blur-3xl border border-white/60 shadow-liquid-glass;
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(64px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-liquid-glass);
   }
   
   .bg-glass-heavy {
-    @apply bg-white/80 backdrop-blur-3xl border border-white/60 shadow-liquid-glass;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(64px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-liquid-glass);
   }
 
   .border-ghost {
     border: 1.5px solid rgba(158, 181, 200, 0.15);
+  }
+
+  .card-premium {
+    background-color: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(64px);
+    border: 1.5px solid rgba(255, 255, 255, 0.6);
+    box-shadow: var(--shadow-liquid-glass);
+    border-radius: 2rem;
+    padding: 2rem;
+    transition-property: transform;
+    transition-duration: 500ms;
+  }
+
+  .card-premium:hover {
+    transform: translateY(-0.25rem);
+    box-shadow: var(--shadow-liquid-hover);
+  }
+
+  .avatar-ring {
+    border-radius: 9999px;
+    padding: 0.25rem;
+    background-image: linear-gradient(to top right, #2563eb, #818cf8);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .btn-action {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #ebf5ff;
+    color: #005bc0;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+
+  .btn-action:hover {
+    background-color: #005bc0;
+    color: #ffffff;
+  }
+
+  .btn-action:active {
+    transform: scale(0.95);
   }
 
   .text-gradient {

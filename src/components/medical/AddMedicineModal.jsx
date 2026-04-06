@@ -1,117 +1,76 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { X, Pill, Info, Plus, ChevronDown, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { X, Pill, Activity, Info, Save, Clock, Calendar, ThermometerSun, Divide as SunDim, Moon, Heart } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
 import { TimePicker } from '../ui/TimePicker';
 
-export function AddMedicineModal({ isOpen, onClose, onAdd, editingPx }) {
+export function AddMedicineModal({ isOpen, onClose, onSave, pxToEdit = null }) {
   const { t } = useTranslation();
+  const [isAnySelectOpen, setIsAnySelectOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     dosage: '',
-    type: 'Chronic Care',
     desc: '',
-    supply: '30',
+    supply: '',
+    type: 'Chronic Care',
     freq: 'Daily',
-    time: 'Morning • 08:00 AM',
-    category: 'primary'
+    time: 'Morning • 08:00 AM'
   });
-  const [customTime, setCustomTime] = useState('12:00');
+
   const [isCustom, setIsCustom] = useState(false);
+  const [customTime, setCustomTime] = useState('08:00 AM');
 
   useEffect(() => {
-    if (editingPx) {
-      setFormData({
-        name: editingPx.name.split(' ')[0], // Base name
-        dosage: editingPx.dosage || editingPx.name.split(' ').slice(1).join(' ') || '',
-        type: editingPx.type || 'Chronic Care',
-        desc: editingPx.desc || '',
-        supply: editingPx.supply || '30',
-        freq: editingPx.freq || 'Daily',
-        time: editingPx.time,
-        category: editingPx.category || 'primary'
-      });
+    if (pxToEdit) {
+      setFormData(pxToEdit);
+      const isPredefined = [
+        t('medicines.timeMorning', 'Morning • 08:00 AM'),
+        t('medicines.timeNoon', 'Noon • 01:00 PM'),
+        t('medicines.timeEvening', 'Evening • 06:00 PM'),
+        t('medicines.timeNightly', 'Nightly • 09:00 PM')
+      ].includes(pxToEdit.time);
       
-      const isCustomTime = editingPx.time.startsWith('Custom •');
-      setIsCustom(isCustomTime);
-      if (isCustomTime) {
-        // Extract time (e.g., "10:30 PM") and convert back to 24h for the picker
-        const timeStr = editingPx.time.split('• ')[1];
-        const [time, ampm] = timeStr.split(' ');
-        let [h, m] = time.split(':');
-        let hour = parseInt(h);
-        if (ampm === 'PM' && hour < 12) hour += 12;
-        if (ampm === 'AM' && hour === 12) hour = 0;
-        setCustomTime(`${hour.toString().padStart(2, '0')}:${m}`);
+      if (!isPredefined) {
+        setIsCustom(true);
+        setCustomTime(pxToEdit.time);
+      } else {
+        setIsCustom(false);
       }
     } else {
       setFormData({
         name: '',
         dosage: '',
-        type: 'Chronic Care',
         desc: '',
-        supply: '30',
-        freq: 'Daily',
-        time: 'Morning • 08:00 AM',
-        category: 'primary'
+        supply: '',
+        type: t('medicines.typeChronic', 'Chronic Care'),
+        freq: t('medicines.freqDaily', 'Daily'),
+        time: t('medicines.timeMorning', 'Morning • 08:00 AM')
       });
       setIsCustom(false);
     }
-  }, [editingPx, isOpen]);
+  }, [pxToEdit, isOpen]);
 
-  const handleSave = () => {
-    if (!formData.name) return;
-    
-    let finalTime = formData.time;
-    let finalCategory = formData.category;
-
-    if (isCustom) {
-      // Format 24h to 12h for display
-      const [hours, minutes] = customTime.split(':');
-      const h = parseInt(hours);
-      const ampm = h >= 12 ? 'PM' : 'AM';
-      const h12 = h % 12 || 12;
-      const formattedTime = `${h12}:${minutes} ${ampm}`;
-      
-      // Assign category based on hour
-      let category = 'secondary';
-      if (h >= 5 && h < 12) category = 'primary'; // Morning
-      else if (h >= 12 && h < 17) category = 'tertiary'; // Afternoon/Noon
-      
-      finalTime = `Custom • ${formattedTime}`;
-      finalCategory = category;
-    }
-
-    onAdd({
-      ...(editingPx || {}),
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave({
       ...formData,
-      time: finalTime,
-      category: finalCategory,
-      id: editingPx?.id || Date.now(),
-      status: editingPx?.status || 'scheduled'
+      time: isCustom ? customTime : formData.time,
+      id: pxToEdit?.id || Date.now(),
+      status: pxToEdit?.status || 'impending',
+      category: formData.time.includes('Morning') ? 'primary' : formData.time.includes('Noon') ? 'tertiary' : 'secondary'
     });
-    
-    setFormData({
-      name: '',
-      dosage: '',
-      type: 'Chronic Care',
-      desc: '',
-      supply: '30',
-      freq: 'Daily',
-      time: 'Morning • 08:00 AM',
-      category: 'primary'
-    });
-    setIsCustom(false);
     onClose();
   };
+
+  const modalShiftY = isAnySelectOpen ? -160 : 0;
 
   return (
     <AnimatePresence>
       {isOpen && (
         <React.Fragment>
+          {/* Backdrop */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -120,155 +79,199 @@ export function AddMedicineModal({ isOpen, onClose, onAdd, editingPx }) {
             className="fixed inset-0 bg-[#0c0d0e]/60 backdrop-blur-md z-[99998]"
           />
           
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 pointer-events-none">
+          {/* Modal Container */}
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4" onClick={onClose}>
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="w-full max-w-xl bg-white/95 backdrop-blur-3xl rounded-[2.5rem] border border-white/60 shadow-[0_40px_80px_rgba(0,0,0,0.15)] flex flex-col pointer-events-auto"
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1, 
+                y: modalShiftY 
+              }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-xl bg-white/95 backdrop-blur-3xl rounded-[2.5rem] border border-slate-200/60 shadow-[0_40px_80px_rgba(0,0,0,0.15)] flex flex-col max-h-[90vh] overflow-hidden"
             >
-              <div className="flex items-center justify-between p-8 border-b border-slate-100">
-                <div className="flex items-center gap-4 mb-10 pb-6 border-b border-slate-100">
-                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
-                    <Pill className="w-7 h-7" />
+              <div className="flex items-center justify-between p-8 border-b border-slate-100 shrink-0">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/20">
+                    <Pill className="w-6 h-6" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-black text-[#191c1e] tracking-tight">
-                      {editingPx ? 'Edit Prescription' : t('medicines.new')}
+                    <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                      {pxToEdit ? t('medicines.editPrescription') : t('medicines.new')}
                     </h2>
-                    <p className="text-sm font-bold text-slate-400">Clinical Data Integration Mode</p>
+                    <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mt-1">
+                      {t('medicines.clinicalMode')}
+                    </p>
                   </div>
-                  <button onClick={onClose} className="ml-auto p-3 hover:bg-slate-50 rounded-2xl transition-all">
-                    <X className="w-6 h-6 text-slate-400" />
-                  </button>
                 </div>
+                <button 
+                  onClick={onClose} 
+                  className="p-3 bg-slate-50 hover:bg-slate-100 ms-auto rounded-2xl text-slate-400 hover:text-slate-900 transition-all border border-slate-100 active:scale-90"
+                >
+                  <X className="w-6 h-6" />
+                </button>
               </div>
 
-              <div className="p-8 space-y-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="col-span-2 md:col-span-1">
-                     <Input 
-                       label="Medicine Name" 
-                       placeholder="e.g. Lisinopril"
+              <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                 <div className="grid grid-cols-2 gap-x-6 gap-y-8 mb-10">
+                   <div className="col-span-2 md:col-span-1 space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                       {t('medicines.medicineName')}
+                     </label>
+                     <input 
+                       type="text" 
+                       required
+                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+                       placeholder={t('medicines.placeholderName')}
                        value={formData.name}
                        onChange={(e) => setFormData({...formData, name: e.target.value})}
                      />
                    </div>
-                   <div className="col-span-2 md:col-span-1">
-                     <Input 
-                       label="Dosage / Strength" 
-                       placeholder="e.g. 10mg"
+                   <div className="col-span-2 md:col-span-1 space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                       {t('medicines.dosageStrength')}
+                     </label>
+                     <input 
+                       type="text" 
+                       required
+                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+                       placeholder={t('medicines.placeholderDosage')}
                        value={formData.dosage}
                        onChange={(e) => setFormData({...formData, dosage: e.target.value})}
                      />
                    </div>
-                   <div className="col-span-2 md:col-span-1">
-                     <Input 
-                       label="Clinical Description" 
-                       placeholder="e.g. Hypertension Support"
+                   
+                   <div className="col-span-2 space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                       {t('medicines.clinicalDesc')}
+                     </label>
+                     <input 
+                       type="text" 
+                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+                       placeholder={t('medicines.placeholderDesc')}
                        value={formData.desc}
                        onChange={(e) => setFormData({...formData, desc: e.target.value})}
                      />
                    </div>
-                   <div className="col-span-2 md:col-span-1">
-                     <Input 
-                       label="Current Supply (Days)" 
-                       type="number"
-                       placeholder="e.g. 30"
+
+                   <div className="col-span-2 md:col-span-1 space-y-2">
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.15em] mb-2.5 px-1 text-start">
+                       {t('medicines.currentSupply')}
+                     </label>
+                     <input 
+                       type="number" 
+                       required
+                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl text-sm font-bold text-slate-900 placeholder:text-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+                       placeholder={t('medicines.placeholderSupply')}
                        value={formData.supply}
                        onChange={(e) => setFormData({...formData, supply: e.target.value})}
                      />
                    </div>
+
                    <Select 
-                     label="Medication Type"
+                     label={t('medicines.medicationType', 'Medication Type')}
                      value={formData.type}
-                     options={['Chronic Care', 'Metabolic', 'Statins', 'Vitamins', 'Antibiotics']}
+                     onOpenChange={setIsAnySelectOpen}
+                     shiftY={modalShiftY}
+                     options={[
+                       t('medicines.typeChronic', 'Chronic Care'),
+                       t('medicines.typeMetabolic', 'Metabolic'),
+                       t('medicines.typeStatins', 'Statins'),
+                       t('medicines.typeVitamins', 'Vitamins'),
+                       t('medicines.typeAntibiotics', 'Antibiotics')
+                     ]}
                      onChange={(e) => setFormData({...formData, type: e.target.value})}
                    />
-                   <Select 
-                     label="Frequency"
-                     value={formData.freq}
-                     options={['Daily', '2x Day', '3x Day', 'Weekly', 'As Needed']}
-                     onChange={(e) => setFormData({...formData, freq: e.target.value})}
-                   />
-                   <Select 
-                     label="Time of Day"
-                     value={isCustom ? 'Custom Time...' : formData.time}
-                     options={[
-                       'Morning • 08:00 AM', 
-                       'Noon • 01:00 PM', 
-                       'Evening • 06:00 PM', 
-                       'Nightly • 09:00 PM',
-                       'Custom Time...'
-                     ]}
-                     onChange={(e) => {
-                       if (e.target.value === 'Custom Time...') {
-                         setIsCustom(true);
-                       } else {
-                         setIsCustom(false);
-                         setFormData({
-                           ...formData, 
-                           time: e.target.value, 
-                           category: e.target.value.includes('Morning') ? 'primary' : e.target.value.includes('Noon') ? 'tertiary' : 'secondary'
-                         });
-                       }
-                     }}
-                   />
-                   
-                   {isCustom && (
-                     <motion.div 
-                       initial={{ opacity: 0, x: -10 }} 
-                       animate={{ opacity: 1, x: 0 }}
-                       className="col-span-2 md:col-span-1"
-                     >
-                       <TimePicker 
-                         label="Set Precise Time"
-                         value={customTime}
-                         onChange={(e) => setCustomTime(e.target.value)}
-                       />
-                     </motion.div>
-                   )}
-                </div>
 
-                <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
-                  <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs font-bold text-blue-700 leading-relaxed">
-                    This medication will be added to your global clinical profile and scheduled in your daily timeline.
-                  </p>
-                </div>
+                    <Select 
+                      label={t('medicines.frequency', 'Frequency')}
+                      value={formData.freq}
+                      onOpenChange={setIsAnySelectOpen}
+                      shiftY={modalShiftY}
+                      options={[
+                        t('medicines.freqDaily', 'Daily'),
+                        t('medicines.freq2x', '2x Day'),
+                        t('medicines.freq3x', '3x Day'),
+                        t('medicines.freqWeekly', 'Weekly'),
+                        t('medicines.freqAsNeeded', 'As Needed')
+                      ]}
+                      onChange={(e) => setFormData({...formData, freq: e.target.value})}
+                    />
+                    <Select 
+                      label={t('medicines.timeOfDay', 'Time of Day')}
+                      onOpenChange={setIsAnySelectOpen}
+                      shiftY={modalShiftY}
+                      value={isCustom ? t('medicines.timeCustom', 'Custom Time...') : formData.time}
+                      options={[
+                        t('medicines.timeMorning', 'Morning • 08:00 AM'), 
+                        t('medicines.timeNoon', 'Noon • 01:00 PM'), 
+                        t('medicines.timeEvening', 'Evening • 06:00 PM'), 
+                        t('medicines.timeNightly', 'Nightly • 09:00 PM'),
+                        t('medicines.timeCustom', 'Custom Time...')
+                      ]}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const morning = t('medicines.timeMorning', 'Morning • 08:00 AM');
+                        const noon = t('medicines.timeNoon', 'Noon • 01:00 PM');
+                        const custom = t('medicines.timeCustom', 'Custom Time...');
+                        if (val === custom) {
+                          setIsCustom(true);
+                        } else {
+                          setIsCustom(false);
+                          setFormData({
+                            ...formData, 
+                            time: val, 
+                            category: val === morning ? 'primary' : val === noon ? 'tertiary' : 'secondary'
+                          });
+                        }
+                      }}
+                    />
+                    
+                    {isCustom && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }} 
+                        animate={{ opacity: 1, x: 0 }}
+                        className="col-span-2 md:col-span-1"
+                      >
+                        <TimePicker 
+                          label={t('medicines.setPreciseTime', 'Set Precise Time')}
+                          value={customTime}
+                          onOpenChange={setIsAnySelectOpen}
+                          shiftY={modalShiftY}
+                          onChange={(e) => setCustomTime(e.target.value)}
+                        />
+                      </motion.div>
+                    )}
+                 </div>
+
+                 <div className="p-5 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+                   <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                   <p className="text-xs font-bold text-blue-700 leading-relaxed text-start">
+                     {t('medicines.medicationInfo', 'This medication will be added to your global clinical profile and scheduled in your daily timeline.')}
+                   </p>
+                 </div>
+              </form>
+
+              <div className="p-8 border-t border-slate-100 bg-slate-50/30 shrink-0 flex gap-3">
+                <button 
+                  type="button"
+                  onClick={onClose}
+                  className="px-8 py-4 text-xs font-black text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {t('medicines.cancel', 'Cancel')}
+                </button>
+                <button 
+                  onClick={handleSubmit}
+                  className="flex-1 bg-blue-600 text-white rounded-2xl py-4 text-xs font-black shadow-xl shadow-blue-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {pxToEdit ? t('medicines.updateRecord', 'Update Clinical Record') : t('medicines.saveRecord', 'Save Prescription')}
+                </button>
               </div>
-
-                <div className="p-8 border-t border-slate-100 flex gap-4">
-                  <Button 
-                    variant="ghost" 
-                    className="flex-1" 
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="primary" 
-                    className="flex-[2]" 
-                    onClick={handleSave}
-                  >
-                    {editingPx ? 'Update Clinical Record' : 'Save Prescription'}
-                  </Button>
-                </div>
             </motion.div>
           </div>
-
-          <style jsx>{`
-            .custom-scrollbar::-webkit-scrollbar {
-              width: 4px;
-            }
-            .custom-scrollbar::-webkit-scrollbar-track {
-              background: transparent;
-            }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-              background: rgba(0, 0, 0, 0.05);
-              border-radius: 10px;
-            }
-          `}</style>
         </React.Fragment>
       )}
     </AnimatePresence>

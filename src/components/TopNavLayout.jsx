@@ -164,7 +164,7 @@ export function TopNavLayout() {
                   )}
                 </div>
                 <span className="text-xs font-bold text-[#191c1e] hidden sm:block">
-                  {userData.firstName ? `Hi, ${userData.firstName}` : 'Account'}
+                  {userData.firstName ? t('nav.hiUser', { name: userData.firstName }) : t('nav.medicalProfile')}
                 </span>
                 <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -175,7 +175,7 @@ export function TopNavLayout() {
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute top-full right-0 mt-3 w-48 bg-white rounded-3xl shadow-2xl border border-ghost p-2 z-50 overflow-hidden"
+                    className={`absolute top-full mt-3 w-48 bg-white rounded-3xl shadow-2xl border border-ghost p-2 z-50 overflow-hidden ${isRtl ? 'left-0' : 'right-0'}`}
                   >
                     <NavLink
                       to="/id"
@@ -183,7 +183,7 @@ export function TopNavLayout() {
                       className="flex items-center gap-3 w-full p-4 rounded-t-2xl hover:bg-slate-50 text-xs font-bold text-slate-700 transition-all"
                     >
                       <User className="w-4 h-4 text-blue-500" />
-                      Medical Profile
+                      {t('nav.medicalProfile')}
                     </NavLink>
                     <button 
                       onClick={() => { 
@@ -194,7 +194,7 @@ export function TopNavLayout() {
                       className="flex items-center gap-3 w-full p-4 rounded-b-2xl hover:bg-red-50 text-xs font-bold text-red-500 transition-all"
                     >
                       <LogOut className="w-4 h-4" />
-                      Logout
+                      {t('nav.logout')}
                     </button>
                   </motion.div>
                 )}
@@ -279,7 +279,7 @@ export function TopNavLayout() {
                       className="w-full p-4 rounded-[1.5rem] bg-white/50 border border-ghost text-lg font-bold text-slate-700 flex items-center gap-3"
                     >
                       <User className="w-5 h-5 text-blue-500" />
-                      View Medical Profile
+                      {t('nav.medicalProfile')}
                     </NavLink>
                     <button 
                       onClick={() => { 
@@ -290,13 +290,13 @@ export function TopNavLayout() {
                       className="w-full p-4 rounded-[1.5rem] bg-red-50 text-red-500 border border-red-100 text-lg font-bold flex items-center justify-center gap-3"
                     >
                       <LogOut className="w-5 h-5" />
-                      Logout Account
+                      {t('nav.logout')}
                     </button>
                   </div>
                 ) : (
                   <Button variant="primary" onClick={() => { setIsAuthOpen(true); setMobileMenuOpen(false); }} className="w-full p-4 text-base shadow-liquid-glass">
                     <User className="w-5 h-5 mr-3" />
-                    Sign In / Register
+                    {t('nav.signInRegister')}
                   </Button>
                 )}
               </div>
@@ -320,6 +320,35 @@ export function TopNavLayout() {
           </motion.div>
         </AnimatePresence>
       </main>
+
+      {/* Global Footer - Hidden on Chat Dashboard to prevent double footers and scroll */}
+      {location.pathname !== '/' && (
+        <footer className="w-full py-6 px-6 border-t border-ghost bg-white/20 backdrop-blur-xl z-20 overflow-hidden relative">
+          <div className="max-w-7xl mx-auto flex flex-col items-center gap-4 text-center">
+            <div className="flex flex-col items-center gap-2 max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 bg-amber-50 text-amber-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-amber-100">
+                {t('chat.disclaimerTitle')}
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 leading-tight italic opacity-70">
+                {t('chat.disclaimerInfo')} <span className="text-red-600">{t('chat.emergencyCall')}</span> {t('chat.button')} <span className="text-red-600">{t('global.realDoctor')}</span>
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="bg-primary-gradient p-1 rounded-lg">
+                  <Activity className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-xs font-manrope font-black text-[var(--color-primary)]">MedAgent</span>
+              </div>
+              <div className="h-4 w-px bg-slate-200/50" />
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                {t('nav.copyright')}
+              </p>
+            </div>
+          </div>
+        </footer>
+      )}
 
       {/* Login / Registration Modal */}
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />

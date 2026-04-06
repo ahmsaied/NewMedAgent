@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Button } from '../components/ui/Button';
-import { Verified, PhoneCall, Droplet, Weight, Ruler, Fingerprint, Shield, Heart, FileText, Lock, Plus, Camera, Pill } from 'lucide-react';
+import { CheckCircle2, PhoneCall, Droplet, Activity, Ruler, Shield, Heart, FileText, Lock, Plus, Camera, Pill } from 'lucide-react';
+
 import femaleAvatar from '../assets/female-avatar.svg';
 import maleAvatar from '../assets/male-avatar.svg';
 import { useTranslation } from 'react-i18next';
@@ -12,10 +13,12 @@ import { useAuth } from '../context/AuthContext';
 import { UpdateHealthModal } from '../components/medical/UpdateHealthModal';
 import { InsuranceModal } from '../components/medical/InsuranceModal';
 import { DigitalInsuranceCard } from '../components/medical/DigitalInsuranceCard';
-import { Edit2 } from 'lucide-react';
+import { SensitiveField } from '../components/ui/SensitiveField';
+import { Pencil } from 'lucide-react';
 
 export default function MedicalID() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n ? i18n.dir() === 'rtl' : false;
   const { userData, updateUser } = useAuth();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -38,7 +41,7 @@ export default function MedicalID() {
           <div className="bg-glass border-ghost rounded-[2rem] p-8 shadow-[0_20px_40px_rgba(25,28,30,0.04)] relative overflow-hidden group">
             {userData.isRegistered && (
               <div className="absolute top-0 right-0 p-6 z-10">
-                <span className="bg-blue-100 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase shadow-sm border border-blue-200/50">Premium Member</span>
+                <span className="bg-blue-100 text-blue-600 text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase shadow-sm border border-blue-200/50">{t('medicalId.premiumMember')}</span>
               </div>
             )}
             <div className="flex flex-col items-center text-center space-y-6 relative z-10 mt-2">
@@ -47,7 +50,7 @@ export default function MedicalID() {
                   <img alt={`${userData.firstName} ${userData.lastName}`} className="w-full h-full rounded-full object-cover border-4 border-white isolate" src={displayImage} />
                 </div>
                 <div className="absolute bottom-1 right-1 bg-white p-1.5 rounded-full shadow-sm border border-slate-100">
-                  <Verified className="w-6 h-6 text-blue-600 fill-blue-600/20" />
+                  <CheckCircle2 className="w-6 h-6 text-blue-600 fill-blue-600/20" />
                 </div>
               </div>
               <div className="space-y-1">
@@ -57,7 +60,7 @@ export default function MedicalID() {
                     : '-'
                   }
                 </h1>
-                <p className="text-slate-500 font-bold tracking-wide">Patient ID: <span className="text-blue-600">{userData.patientId}</span></p>
+                <p className="text-slate-500 font-bold tracking-wide">{t('medicalId.patientIdLabel')}: <SensitiveField className="text-blue-600" value={userData.patientId} /></p>
               </div>
               <ProfileActions 
                 onUpdateHealth={() => setIsUpdateModalOpen(true)}
@@ -100,11 +103,11 @@ export default function MedicalID() {
               <p className="text-2xl font-black text-[#191c1e] tracking-tighter w-full">{userData.bloodType || '-'}</p>
             </div>
             <div className="bg-glass border-ghost p-6 rounded-[2rem] shadow-sm hover:translate-y-[-4px] transition-transform">
-              <Weight className="w-8 h-8 text-blue-600 mb-4 fill-blue-100" />
+              <Activity className="w-8 h-8 text-blue-600 mb-4" />
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t('medicalId.weight')}</p>
               <p className="text-2xl font-black text-[#191c1e] tracking-tighter">
                 {userData.weight ? (
-                  <>{userData.weight} <span className="text-base font-bold text-slate-500 tracking-normal">kg</span></>
+                  <>{userData.weight} <span className="text-base font-bold text-slate-500 tracking-normal">{t('global.kg')}</span></>
                 ) : '-'}
               </p>
             </div>
@@ -113,14 +116,14 @@ export default function MedicalID() {
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t('medicalId.height')}</p>
               <p className="text-2xl font-black text-[#191c1e] tracking-tighter">
                 {userData.height ? (
-                  <>{userData.height} <span className="text-base font-bold text-slate-500 tracking-normal">cm</span></>
+                  <>{userData.height} <span className="text-base font-bold text-slate-500 tracking-normal">{t('global.cm')}</span></>
                 ) : '-'}
               </p>
             </div>
             <div className="bg-glass border-ghost p-6 rounded-[2rem] shadow-sm hover:translate-y-[-4px] transition-transform">
-              <Fingerprint className="w-8 h-8 text-orange-500 mb-4 fill-orange-100" />
+              <Shield className="w-8 h-8 text-orange-500 mb-4" />
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{t('medicalId.nationalId')}</p>
-              <p className="text-2xl font-black text-[#191c1e] tracking-tighter">{userData.nationalId || '-'}</p>
+              <p className="text-2xl font-black text-[#191c1e] tracking-tighter"><SensitiveField value={userData.nationalId} fallback="-" /></p>
             </div>
           </div>
 
@@ -137,23 +140,23 @@ export default function MedicalID() {
                     <button 
                       onClick={() => setIsInsuranceModalOpen(true)}
                       className="p-1.5 rounded-full hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                      title="Edit Insurance"
+                      title={t('medicalId.editInsurance')}
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </button>
                   </div>
                   <p className="text-slate-500 font-bold mt-0.5 flex items-center gap-2">
                     {!userData.insuranceData?.providerName && !userData.insuranceData?.cardImage ? (
-                      <span className="text-slate-400">No Insurance Data Found</span>
+                      <span className="text-slate-400">{t('medicalId.noInsurance')}</span>
                     ) : userData.insuranceData?.cardImage ? (
                       <>
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-emerald-500 font-extrabold uppercase tracking-wide text-xs">Active Coverage • Verified Photo</span>
+                        <span className="text-emerald-500 font-extrabold uppercase tracking-wide text-xs">{t('medicalId.verifiedPhoto')}</span>
                       </>
                     ) : (
                       <>
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                        <span className="text-blue-600 font-extrabold uppercase tracking-wide text-xs">Active Coverage • Manual Data</span>
+                        <span className="text-blue-600 font-extrabold uppercase tracking-wide text-xs">{t('medicalId.manualData')}</span>
                       </>
                     )}
                   </p>
@@ -168,7 +171,7 @@ export default function MedicalID() {
                   <Camera className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
                   {t('medicalId.viewDigitalCard')}
                 </span>
-                <span className="opacity-60 text-lg group-hover:translate-x-1 transition-transform">→</span>
+                <span className="opacity-60 text-lg group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform ms-1">{isRtl ? '←' : '→'}</span>
               </button>
             </div>
 
@@ -204,13 +207,13 @@ export default function MedicalID() {
                   <button 
                     onClick={() => setIsUpdateModalOpen(true)}
                     className="p-1.5 rounded-full hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                    title="Edit Allergies"
+                    title={t('medicalId.editAllergies')}
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </button>
                 </div>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
-                  Last Verified: {userData.lastVerified}
+                  {t('medicalId.lastVerified')}: {userData.lastVerified}
                 </span>
               </div>
               
@@ -243,13 +246,13 @@ export default function MedicalID() {
 
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-extrabold tracking-tight text-[#191c1e]">Chronic Conditions</h2>
+                <h2 className="text-2xl font-extrabold tracking-tight text-[#191c1e]">{t('medicalId.chronicConditions')}</h2>
                 <button 
                   onClick={() => setIsUpdateModalOpen(true)}
                   className="p-1.5 rounded-full hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                  title="Edit Conditions"
+                  title={t('medicalId.editConditions')}
                 >
-                  <Edit2 className="w-4 h-4" />
+                  <Pencil className="w-4 h-4" />
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -257,7 +260,7 @@ export default function MedicalID() {
                   <div key={condition.id} className="p-6 bg-slate-50/80 rounded-[2rem] border border-slate-200/60 shadow-inner">
                     <h4 className="font-extrabold text-lg text-[#191c1e] mb-2 tracking-tight">{condition.name || '-'}</h4>
                     <p className="text-slate-500 font-medium text-sm leading-relaxed">
-                      {condition.description || 'Condition details managed and monitored by medical professional.'}
+                      {condition.description || t('medicalId.defaultConditionDesc')}
                     </p>
                   </div>
                 )) : (
@@ -269,14 +272,14 @@ export default function MedicalID() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-extrabold tracking-tight text-[#191c1e]">Active Medications</h2>
+                  <h2 className="text-2xl font-extrabold tracking-tight text-[#191c1e]">{t('medicalId.activeMeds')}</h2>
                   <a 
                     href="/medicines"
                     onClick={(e) => { e.preventDefault(); window.location.href='/medicines'; }}
                     className="p-1.5 rounded-full hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                    title="Manage Medications"
+                    title={t('medicalId.manageMeds')}
                   >
-                    <Edit2 className="w-4 h-4" />
+                    <Pencil className="w-4 h-4" />
                   </a>
                 </div>
               </div>
@@ -289,7 +292,7 @@ export default function MedicalID() {
                     <div>
                       <h4 className="font-extrabold text-lg text-[#191c1e] mb-1 tracking-tight">{px.name}</h4>
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">
-                        {px.freq} • {px.time.split('•')[0].trim()}
+                        {px.freq} {px.time ? `• ${px.time.split('•')[0].trim()}` : ''}
                       </p>
                     </div>
                   </div>
@@ -300,16 +303,16 @@ export default function MedicalID() {
             </div>
 
             <div className="pt-10 border-t border-slate-200/60">
-              <div className="flex flex-col md:flex-row gap-8 items-start text-left">
+              <div className="flex flex-col md:flex-row gap-8 items-start text-start">
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-extrabold text-[#191c1e] tracking-tight text-lg">Organ Donor Status</h4>
+                    <h4 className="font-extrabold text-[#191c1e] tracking-tight text-lg">{t('medicalId.organDonor')}</h4>
                     <button 
                       onClick={() => setIsUpdateModalOpen(true)}
                       className="p-1.5 rounded-full hover:bg-blue-50 text-blue-400 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
-                      title="Edit Organ Donor Status"
+                      title={t('medicalId.editOrganDonor')}
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <Pencil className="w-4 h-4" />
                     </button>
                   </div>
                   <div className={`flex items-center gap-2 font-bold ${
@@ -318,14 +321,14 @@ export default function MedicalID() {
                     <Heart className={`w-5 h-5 ${
                       userData.organDonor === 'Registered Donor' ? 'fill-emerald-500' : 'fill-red-500'
                     }`} />
-                    {userData.organDonor || 'Not Registered'}
+                    {userData.organDonor || t('medicalId.notRegistered')}
                   </div>
                 </div>
                 <div className="flex-1 space-y-2">
-                  <h4 className="font-extrabold text-[#191c1e] tracking-tight text-lg">Advance Directives</h4>
+                  <h4 className="font-extrabold text-[#191c1e] tracking-tight text-lg">{t('medicalId.advanceDirectives')}</h4>
                   <div className="flex items-center gap-2 text-slate-500 font-bold">
                     <FileText className="w-5 h-5 text-slate-400" />
-                    {userData.advanceDirectives || 'Not registered'}
+                    {userData.advanceDirectives || t('medicalId.notRegistered')}
                   </div>
                 </div>
               </div>
@@ -337,9 +340,9 @@ export default function MedicalID() {
               <Lock className="w-6 h-6 text-white" />
             </div>
             <div className="space-y-2 flex-1">
-              <h4 className="text-xl font-extrabold text-blue-600 tracking-tight">Emergency Accessibility</h4>
-              <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-2xl text-left">
-                {userData.emergencyAccessibility}
+              <h4 className="text-xl font-extrabold text-blue-600 tracking-tight">{t('medicalId.emergencyAccess')}</h4>
+              <p className="text-sm text-slate-600 font-medium leading-relaxed max-w-2xl text-start">
+                {t('medicalId.emergencyAccessDesc', { level: userData.emergencyAccessibility })}
               </p>
             </div>
           </div>
