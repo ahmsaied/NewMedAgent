@@ -7,12 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Frontend
 node_modules
 dist
 dist-ssr
 *.local
 .env
 .env.*
+
+# .NET Backend
+backend/**/bin/
+backend/**/obj/
+*.db
+*.db-shm
+*.db-wal
 
 # Editor directories and files
 .vscode/*
